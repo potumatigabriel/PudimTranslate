@@ -150,6 +150,48 @@ one that was written is detected from the message itself — see the top of this
 
 ---
 
+## Is it working?
+
+The translator opens in a window of its own and prints what it does. A healthy start looks like
+this, and a translated phrase shows up as a `>` line (what was said) followed by a `<` line (what
+came back):
+
+```
+PudimTranslate - tradutor de chat
+  pasta do jogo : D:\Documents\My Games\0ad
+  ponte         : D:\Documents\My Games\0ad\saves\campaigns
+  idioma destino: pt (o jogo pode pedir outro)
+  cache         : 12 frase(s) ja conhecidas
+
+  traduzindo para: pt
+  > attack blue from the north, i need help
+  < ataque o azul do norte, preciso de ajuda
+```
+
+Leave that window open while you play. Closing it stops translation; the game keeps running.
+
+## When something goes wrong
+
+**The message says the translator is off.** The game was opened before the translator was running.
+This is the one failure that cannot fix itself mid-session: 0 A.D. indexes its data folders once at
+startup, so if the bridge was not there at that moment, it stays invisible for the whole session.
+Close 0 A.D. and open it again with the desktop shortcut.
+
+**The translator window flashes and disappears.** Something in it failed. Run `tools/PudimTradutor.bat`
+on its own — the window stays open and shows the error instead of vanishing.
+
+**Nothing happens when you click a message.** If the line is a system notice (`== Someone joined`),
+that is deliberate — the game already shows those in your language. For anything else, check whether
+the translator window is still open.
+
+**You updated the mod and nothing changed.** 0 A.D. loads mod scripts only when it starts. Close the
+game completely and open it again.
+
+**The desktop shortcut points somewhere stale** after moving the mod folder. Run the launcher once
+from its new location and the shortcut fixes its own target.
+
+---
+
 ## Why a companion program at all
 
 There is no way around it: the 0 A.D. GUI script engine has **no HTTP** — no `fetch`, no XHR. The
