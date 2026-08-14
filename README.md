@@ -1,10 +1,18 @@
 # PudimTranslate — chat translation for 0 A.D.
 
-**Click a chat message to translate it. Click again to get the English back.** Works in a match, in
+**Click a chat message to translate it. Click again to get the original back.** Works in a match, in
 the multiplayer lobby and in the match setup screen.
 
-Built for players whose English is shaky and who still want to play multiplayer, where everyone
-talks in English.
+**Any language, in both directions, with nothing to configure.** You never pick a language pair:
+
+- **What was written** is detected automatically. English, Spanish, German, Russian, Chinese,
+  Portuguese — it does not matter, and it does not have to be the same language twice in a row. A
+  room where three people type in three different languages just works.
+- **What you get back** is whatever language your 0 A.D. is installed in. Playing in Spanish gives
+  you Spanish; playing in Polish gives you Polish. The mod reads the game's own locale, so there is
+  no setting to find and nothing to keep in sync.
+
+Built for players who want to play multiplayer without being locked out of the conversation.
 
 > **No dependencies beyond 0 A.D. itself** — and none on PudimMod either. The two are independent;
 > running both together causes no conflict, because PudimTranslate keeps its helpers in its own
@@ -82,19 +90,22 @@ To update, replace the folder with the newer version and restart the game.
 **Click the message. That is the whole thing.** There is no button to find and no menu to open — the
 line of text *is* the button.
 
-In the multiplayer lobby, someone says hello in English:
+The screenshots below happen to show English being turned into Portuguese, because that is the
+author's setup — but nothing in them is specific to that pair.
+
+In the multiplayer lobby, someone says hello in a language you do not read:
 
 ![Lobby chat before translating](docs/lobby-antes.png)
 
 Click that line and it comes back in your language, in green so you can tell at a glance what was
-translated and what was already in English:
+translated and what is still as it was written:
 
 ![The same line, translated](docs/lobby-depois.png)
 
 **Click it again to get the original back.** Nothing is lost.
 
 It works the same in the match setup screen, where most of the talking happens before a game. Here a
-whole conversation is in English:
+whole conversation is in a foreign language:
 
 ![Match setup chat before translating](docs/partida-antes.png)
 
@@ -103,7 +114,7 @@ Click any lines you want. Each one is independent, so you can translate only wha
 ![Several lines translated](docs/partida-depois.png)
 
 In a match it is the same gesture: click the chat line on screen. There the line also carries a
-tooltip, so hovering a translated message shows the original English without switching it back.
+tooltip, so hovering a translated message shows the original wording without switching it back.
 
 A few things worth knowing:
 
@@ -119,9 +130,8 @@ A few things worth knowing:
 incoming message is translated as it arrives. This applies **inside a match only** — in the lobby and
 the match setup screen you still click the messages you want.
 
-**The target language follows the game.** Whatever locale 0 A.D. runs in is what you get back — play
-in Spanish and the chat comes back in Spanish, with nothing to configure. The source language is
-never declared: Google detects it on its own.
+**Neither language is ever configured.** The one you read is taken from your 0 A.D. install, and the
+one that was written is detected from the message itself — see the top of this page.
 
 ---
 

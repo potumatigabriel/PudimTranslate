@@ -2,7 +2,7 @@
   "name": "PudimTranslate",
   "version": "1.0.0",
   "label": "PudimTranslate - Chat translation",
-  "description": "Click a chat message to translate it, in a match, in the multiplayer lobby and in the match setup screen. Translates into whatever language 0 A.D. is running in, through Google Translate. Needs the companion program in tools/. Works on its own; no dependency on other mods.",
+  "description": "Click a chat message to translate it, in a match, in the multiplayer lobby and in the match setup screen. Any language: what was written is detected automatically, and the answer comes back in whatever language 0 A.D. is installed in - no language pair to configure. Uses Google Translate through the companion program in tools/. Works on its own; no dependency on other mods.",
   "ignoreInCompatibilityChecks": true,
   "dependencies": [
     "0ad>=0.28.0"
