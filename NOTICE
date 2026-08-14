@@ -1,0 +1,42 @@
+    PudimTranslate. 0 A.D. chat translation mod.
+    Copyright (C) 2026  Gabriel Potumati
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+THIRD-PARTY CODE
+================
+
+None. All code in this mod is original.
+
+
+EXTERNAL SERVICE
+================
+
+Translation is performed by Google Translate, through the endpoint at
+translate.googleapis.com used by the translate.google.com page. That endpoint
+is not documented by Google and is not covered by any agreement with this
+project; it may change or stop working without notice.
+
+Chat messages the user chooses to translate are sent to that service. No
+credentials, account or API key is involved, and nothing else is transmitted.
+
+
+RELATION TO PudimMod
+====================
+
+PudimTranslate started as a feature inside PudimMod and was split out so it
+could be used on its own. Both are by the same author and under the same
+license. Neither depends on the other, and they can run side by side: this mod
+keeps its helpers under the "pudimtr_" prefix, so no global is contested.

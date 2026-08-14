@@ -1,0 +1,14 @@
+# Backups automáticos criados antes de cada alteração
+*.bak
+*.bak-*
+*.bak.*
+
+# Rascunhos de trabalho
+scratch*.txt
+
+# Estado local do Visual Studio (não pertence ao repositório)
+.vs/
+
+# Cache do Python (tools/pudim_tradutor.py)
+__pycache__/
+*.pyc
