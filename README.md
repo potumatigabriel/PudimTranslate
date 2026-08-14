@@ -39,8 +39,18 @@ mod  --writes-->  saves/campaigns/pudim_tr_req.json  --reads-->  pudim_tradutor.
 mod  <---reads--  saves/campaigns/pudim_tr_res.json  <--writes-------'
 ```
 
-Run `tools/PudimTradutor.bat` (needs Python) and leave the window open while you play. Without it
-nothing breaks — the message just says the translator is off.
+**The easy way: launch the game through `tools/Jogar0AD.bat`** (needs Python). It starts the
+translator, opens 0 A.D., and shuts the translator down when you quit. Use it instead of your normal
+0 A.D. shortcut and there is nothing else to remember — right-click it and *Send to → Desktop* to
+keep it handy. It finds the game on its own; if it cannot, run it once with
+`--jogo "C:\path\to\pyrogenesis.exe"` and the path is remembered.
+
+The mod cannot start the translator by itself, and shouldn't be able to: the 0 A.D. GUI script
+engine runs no programs. So the order is inverted — instead of the game launching the translator,
+one shortcut launches both.
+
+To run the translator on its own instead, use `tools/PudimTradutor.bat` and leave the window open
+while you play. Without it nothing breaks — the message just says the translator is off.
 
 No API key and no sign-up: it calls the same free endpoint the translate.google.com page uses.
 Translations are cached on disk, so a phrase already seen costs no network round trip.

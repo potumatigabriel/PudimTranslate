@@ -12,3 +12,6 @@ scratch*.txt
 # Cache do Python (tools/pudim_tradutor.py)
 __pycache__/
 *.pyc
+
+# Caminho do 0 A.D. descoberto pelo atalho: e local desta maquina
+tools/caminho_do_jogo.txt
