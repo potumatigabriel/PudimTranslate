@@ -21,19 +21,16 @@ startup, and never notices files that appear afterwards. If the translator is no
 when the game starts, the game cannot see the bridge at all and nothing will translate for that
 whole session. Closing and reopening 0 A.D. fixes it.
 
-So the routine is:
+**So do not launch 0 A.D. the usual way. Launch it with `tools/Play0AD.bat`**, which starts the
+translator, waits for the bridge to be ready, opens the game, and shuts the translator down when you
+quit. One click, right order, nothing to remember.
 
-1. Open the translator. Leave its window open.
-2. Open 0 A.D.
-3. Play. Click any chat message to translate it.
+The first time it runs, it puts a **`0 A.D. Translator` shortcut on your desktop** — with the 0 A.D.
+icon and the correct path for your machine — so you never have to find the folder again. Use that
+shortcut from then on, in place of your normal 0 A.D. shortcut.
 
-**The first time you run the translator it creates a `0 A.D. Translator` shortcut on your desktop**,
-with the 0 A.D. icon and the correct path for your machine, so you do not have to go hunting for the
-folder again. Put it next to your 0 A.D. shortcut and always click it first.
-
-If you would rather not think about the order at all, use **`tools/Jogar0AD.bat`** instead: it starts
-the translator, waits for it to be ready, opens 0 A.D., and shuts the translator down when you quit.
-One click, right order, nothing to remember.
+If you prefer to keep them apart, run `tools/PudimTradutor.bat`, leave its window open, and only
+then open 0 A.D. yourself.
 
 ---
 
@@ -64,20 +61,46 @@ To update, replace the folder with the newer version and restart the game.
 
 ---
 
-## Using it
+## How to translate a message
 
-Click a chat message. It turns into your language; click again and the English comes back. The
-original is always in the tooltip, so nothing is lost.
+**Click the message. That is the whole thing.** There is no button to find and no menu to open — the
+line of text *is* the button.
 
-While a phrase is being translated the line shows *translating…*. If it says the translator is off,
-you opened the game without starting the translator first — close 0 A.D., start the translator, open
-the game again.
+In the multiplayer lobby, someone says hello in English:
 
-System notices (*"== Someone joined."*) are never sent anywhere: 0 A.D. already shows those in your
-own language.
+![Lobby chat before translating](docs/lobby-antes.png)
 
-Set `pudimtranslate.auto` to `true` in the user config to translate every incoming message
-automatically instead of clicking one by one.
+Click that line and it comes back in your language, in green so you can tell at a glance what was
+translated and what was already in English:
+
+![The same line, translated](docs/lobby-depois.png)
+
+**Click it again to get the original back.** Nothing is lost — the English is also kept in the
+tooltip, so hovering the translated line shows what was really said.
+
+It works the same in the match setup screen, where most of the talking happens before a game. Here a
+whole conversation is in English:
+
+![Match setup chat before translating](docs/partida-antes.png)
+
+Click any lines you want. Each one is independent, so you can translate only what you care about:
+
+![Several lines translated](docs/partida-depois.png)
+
+In a match it is the same gesture: click the chat line on screen.
+
+A few things worth knowing:
+
+- While a phrase is being fetched the line shows *translating…*. It usually lasts a blink.
+- If it says the translator is off, you opened the game without the translator running. Close 0 A.D.,
+  start it with the desktop shortcut, and try again.
+- System notices (*"== Someone joined."*) do nothing when clicked, on purpose: 0 A.D. already shows
+  those in your own language, so there is nothing to translate.
+- A phrase already translated once is free forever — it is cached on disk, so repeats like *gg* or
+  *well played* never hit the network again.
+
+**Do not want to click at all?** Set `pudimtranslate.auto` to `true` in the user config and every
+incoming message is translated as it arrives.
 
 **The target language follows the game.** Whatever locale 0 A.D. runs in is what you get back — play
 in Spanish and the chat comes back in Spanish, with nothing to configure. The source language is

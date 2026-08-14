@@ -276,24 +276,36 @@ pudimtr_patchApplyN("init", function(target, that, args)
 
 		pudim_TrIniciar(painel);
 
-		// Decoramos a mensagem antes de o overlay guardá-la: o objeto que
-		// chega aqui é o mesmo que ele vai desenhar, então o callback já entra
-		// valendo no primeiro desenho.
-		pudimtr_patchApplyN(ChatOverlay.prototype, "onChatMessage", function(alvo, esse, argumentos)
+		// Entramos pela porta da frente: registerMessageHandler é o ponto de
+		// extensão que o próprio jogo oferece.
+		//
+		// Patchear ChatOverlay.prototype.onChatMessage NÃO funciona aqui, e o
+		// motivo é sutil. O Chat liga o overlay assim (Chat.js):
+		//
+		//     this.ChatMessageHandler.registerMessageHandler(
+		//         this.ChatOverlay.onChatMessage.bind(this.ChatOverlay));
+		//
+		// O bind congela a função naquele instante, e isso acontece dentro do
+		// init() (session.js:290), ou seja, antes de chegarmos aqui. Trocar o
+		// protótipo depois não alcança a cópia já ligada, e o patch nunca era
+		// chamado — o chat da partida simplesmente não respondia ao clique.
+		//
+		// Nosso handler roda depois do overlay ter guardado a mensagem, mas o
+		// objeto é o mesmo: alteramos e mandamos redesenhar.
+		g_Chat.ChatMessageHandler.registerMessageHandler((msg, formatada) =>
 		{
-			const [msg, chatMessage] = argumentos;
-
 			// Só fala de jogador. Notificação de jogo ("Fulano foi derrotado")
 			// já vem traduzida pelo próprio 0 A.D. — mandar para o Google seria
 			// pagar uma volta na rede para piorar o texto.
-			if (msg && msg.type == "message" && chatMessage && chatMessage.text)
-				try {
-					pudim_TrDecorar(chatMessage);
-				} catch (e) {
-					warn("PudimTranslate: falha ao preparar a tradução da fala: " + e);
-				}
+			if (!msg || msg.type != "message" || !formatada || !formatada.text)
+				return;
 
-			return alvo.apply(esse, argumentos);
+			try {
+				pudim_TrDecorar(formatada);
+				g_Chat.ChatOverlay.displayChatMessages();
+			} catch (e) {
+				warn("PudimTranslate: falha ao preparar a tradução da fala: " + e);
+			}
 		});
 
 		pudimtr_patchApplyN(ChatHistory.prototype, "displayChatHistory", function(alvo, esse, argumentos)

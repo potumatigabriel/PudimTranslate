@@ -358,8 +358,8 @@ def main():
         atalho = criar_atalho_area_de_trabalho()
         if atalho:
             print()
-            print(f"  Criei um atalho na sua area de trabalho: {os.path.basename(atalho)}")
-            print("  Use ele para ligar o tradutor. IMPORTANTE: abra o tradutor ANTES do 0 A.D.")
+            print(f"  Atalho pronto na sua area de trabalho: {os.path.basename(atalho)}")
+            print("  Use ele para jogar: abre o tradutor e o 0 A.D. juntos, na ordem certa.")
 
     print()
     print("  Deixe esta janela aberta enquanto joga. Ctrl+C para sair.")

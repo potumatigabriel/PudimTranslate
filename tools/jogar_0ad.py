@@ -17,7 +17,7 @@ O tradutor nao fica sobrando depois que voce fecha o jogo.
 
 Uso
 ---
-    Jogar0AD.bat                       (o normal: e so dar dois cliques)
+    Play0AD.bat                       (o normal: e so dar dois cliques)
     python jogar_0ad.py --jogo "C:/caminho/para/pyrogenesis.exe"
     python jogar_0ad.py -- -mod=mod -mod=public   (o que vier depois de -- vai para o jogo)
 
@@ -162,15 +162,37 @@ def pasta_area_de_trabalho():
 NOME_ATALHO = "0 A.D. Translator.lnk"
 
 
+def alvo_do_atalho(atalho):
+    """Para onde um atalho ja existente aponta, ou "" se nao der para ler."""
+    script = (
+        "$ws = New-Object -ComObject WScript.Shell; "
+        f'$ws.CreateShortcut("{atalho}").TargetPath'
+    )
+    try:
+        return subprocess.run(
+            ["powershell", "-NoProfile", "-Command", script],
+            capture_output=True, text=True, timeout=30,
+        ).stdout.strip()
+    except Exception:
+        return ""
+
+
 def criar_atalho_do_tradutor():
     """
-    Cria, uma vez so, um atalho do tradutor na area de trabalho.
+    Garante o atalho na area de trabalho apontando para o lancador.
 
-    Leva o icone do proprio 0 A.D. para ficar reconhecivel ao lado do atalho do
-    jogo, e o caminho absoluto desta maquina — assim funciona de onde o usuario
-    tiver posto a pasta do mod.
+    O alvo e o Play0AD.bat, e nao o tradutor sozinho: ele abre o tradutor,
+    espera a ponte ficar pronta, abre o 0 A.D. e encerra o tradutor na saida.
+    Um clique so, na ordem certa — que e o que importa, porque o jogo so
+    enxerga a ponte se ela existir quando ele inicia.
 
-    @returns o caminho do atalho criado, ou None se ja existia ou nao deu.
+    Se o atalho ja existe mas aponta para outro lugar (versao anterior do mod,
+    ou a pasta mudou), o alvo e corrigido em vez de ficar quebrado.
+
+    Leva o icone do proprio 0 A.D. e o caminho absoluto desta maquina, entao
+    funciona de onde o usuario tiver posto a pasta do mod.
+
+    @returns o caminho do atalho, se criado ou corrigido; None se ja estava bom.
     """
     if os.name != "nt":
         return None
@@ -179,12 +201,13 @@ def criar_atalho_do_tradutor():
     if not area:
         return None
 
-    atalho = os.path.join(area, NOME_ATALHO)
-    if os.path.exists(atalho):
+    alvo = os.path.join(AQUI, "Play0AD.bat")
+    if not os.path.isfile(alvo):
         return None
 
-    alvo = os.path.join(AQUI, "PudimTradutor.bat")
-    if not os.path.isfile(alvo):
+    atalho = os.path.join(area, NOME_ATALHO)
+    if os.path.exists(atalho) and \
+       os.path.normcase(alvo_do_atalho(atalho)) == os.path.normcase(alvo):
         return None
 
     # O icone do jogo e um extra: se o executavel nao for encontrado, o atalho e
@@ -198,7 +221,7 @@ def criar_atalho_do_tradutor():
         f'$s.TargetPath = "{alvo}"; '
         f'$s.WorkingDirectory = "{AQUI}"; '
         f"{linha_icone}"
-        '$s.Description = "Tradutor de chat do 0 A.D. - abra ANTES do jogo"; '
+        '$s.Description = "Abre o 0 A.D. com o tradutor de chat do PudimTranslate"; '
         "$s.Save()"
     )
 

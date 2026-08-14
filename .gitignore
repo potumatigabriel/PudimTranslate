@@ -15,3 +15,6 @@ __pycache__/
 
 # Caminho do 0 A.D. descoberto pelo atalho: e local desta maquina
 tools/caminho_do_jogo.txt
+
+# Prints originais (pesados) — as versoes recortadas ficam em docs/
+docs/originais/
