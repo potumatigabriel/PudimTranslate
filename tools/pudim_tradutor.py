@@ -202,6 +202,30 @@ def limpar(texto):
     return TAGS.sub("", texto).strip()
 
 
+def criar_atalho_area_de_trabalho():
+    """
+    Cria o atalho do tradutor na area de trabalho, uma vez so.
+
+    A criacao mora em jogar_0ad.py, que ja sabe achar o executavel do jogo (o
+    icone do atalho vem de la). O import e feito aqui dentro, e nao no topo do
+    arquivo, porque jogar_0ad.py tambem importa este modulo — no topo, os dois
+    se importariam em circulo.
+
+    @returns o caminho do atalho criado, ou None se ja existia ou nao deu.
+    """
+    try:
+        import importlib.util
+        caminho = os.path.join(os.path.dirname(os.path.abspath(__file__)), "jogar_0ad.py")
+        spec = importlib.util.spec_from_file_location("jogar_0ad", caminho)
+        modulo = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modulo)
+        return modulo.criar_atalho_do_tradutor()
+    except Exception:
+        # Nao conseguir criar um atalho de conveniencia nao pode impedir o
+        # tradutor de funcionar.
+        return None
+
+
 def normalizar_idioma(codigo):
     """
     Converte o codigo de idioma do jogo para o formato do tradutor.
@@ -305,6 +329,8 @@ def main():
     analisador.add_argument("--to", default="pt", help="Idioma de destino (padrao: pt)")
     analisador.add_argument("--from", dest="origem", default="auto",
                             help="Idioma de origem (padrao: auto)")
+    analisador.add_argument("--sem-atalho", action="store_true",
+                            help="Nao criar o atalho na area de trabalho")
     argumentos = analisador.parse_args()
 
     userdata = achar_userdata(argumentos.dir)
@@ -327,7 +353,18 @@ def main():
     print(f"  ponte         : {pasta}")
     print(f"  idioma destino: {argumentos.to} (o jogo pode pedir outro)")
     print(f"  cache         : {len(cache)} frase(s) ja conhecidas")
-    print("  Deixe esta janela aberta enquanto joga. Ctrl+C para sair.\n")
+
+    if not argumentos.sem_atalho:
+        atalho = criar_atalho_area_de_trabalho()
+        if atalho:
+            print()
+            print(f"  Criei um atalho na sua area de trabalho: {os.path.basename(atalho)}")
+            print("  Use ele para ligar o tradutor. IMPORTANTE: abra o tradutor ANTES do 0 A.D.")
+
+    print()
+    print("  Deixe esta janela aberta enquanto joga. Ctrl+C para sair.")
+    print("  Se o 0 A.D. ja estiver aberto, feche e abra de novo — o jogo so")
+    print("  enxerga a ponte se ela existir quando ele inicia.\n")
 
     # Deixa um res.json valido no lugar ja na largada. O mod precisa que o
     # arquivo exista antes de tentar ler.

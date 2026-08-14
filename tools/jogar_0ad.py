@@ -134,6 +134,85 @@ def achar_jogo(preferido=None):
     return None
 
 
+def pasta_area_de_trabalho():
+    """
+    Area de trabalho real, lida do registro do Windows.
+
+    Pelo mesmo motivo da pasta Documentos: com o OneDrive ligado, a area de
+    trabalho vira algo como D:\\OneDrive\\Area de Trabalho, e o
+    C:\\Users\\<nome>\\Desktop continua existindo, vazio. Adivinhar pelo nome
+    criaria o atalho numa pasta que o usuario nunca ve.
+    """
+    if os.name != "nt":
+        return None
+    try:
+        import winreg
+        chave = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",
+        )
+        with chave:
+            valor, _ = winreg.QueryValueEx(chave, "Desktop")
+        caminho = os.path.expandvars(valor)
+        return caminho if os.path.isdir(caminho) else None
+    except Exception:
+        return None
+
+
+NOME_ATALHO = "0 A.D. Translator.lnk"
+
+
+def criar_atalho_do_tradutor():
+    """
+    Cria, uma vez so, um atalho do tradutor na area de trabalho.
+
+    Leva o icone do proprio 0 A.D. para ficar reconhecivel ao lado do atalho do
+    jogo, e o caminho absoluto desta maquina — assim funciona de onde o usuario
+    tiver posto a pasta do mod.
+
+    @returns o caminho do atalho criado, ou None se ja existia ou nao deu.
+    """
+    if os.name != "nt":
+        return None
+
+    area = pasta_area_de_trabalho()
+    if not area:
+        return None
+
+    atalho = os.path.join(area, NOME_ATALHO)
+    if os.path.exists(atalho):
+        return None
+
+    alvo = os.path.join(AQUI, "PudimTradutor.bat")
+    if not os.path.isfile(alvo):
+        return None
+
+    # O icone do jogo e um extra: se o executavel nao for encontrado, o atalho e
+    # criado do mesmo jeito, apenas com o icone padrao.
+    jogo = achar_jogo(None)
+    linha_icone = f'$s.IconLocation = "{jogo},0"; ' if jogo else ""
+
+    script = (
+        "$ws = New-Object -ComObject WScript.Shell; "
+        f'$s = $ws.CreateShortcut("{atalho}"); '
+        f'$s.TargetPath = "{alvo}"; '
+        f'$s.WorkingDirectory = "{AQUI}"; '
+        f"{linha_icone}"
+        '$s.Description = "Tradutor de chat do 0 A.D. - abra ANTES do jogo"; '
+        "$s.Save()"
+    )
+
+    try:
+        resultado = subprocess.run(
+            ["powershell", "-NoProfile", "-Command", script],
+            capture_output=True, text=True, timeout=30,
+        )
+    except Exception:
+        return None
+
+    return atalho if resultado.returncode == 0 and os.path.exists(atalho) else None
+
+
 def userdata_do_tradutor():
     """
     Pasta de dados do 0 A.D., pela mesma logica que o tradutor usa.
