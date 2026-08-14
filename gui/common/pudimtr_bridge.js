@@ -104,21 +104,24 @@ const PUDIM_TR_CARIMBO = /^\\?\[\d{1,2}:\d{2}(?::\d{2})?\]\s*/;
 /**
  * O apelido de quem falou, nos dois formatos que o jogo usa:
  *
- *   "[font=\"sans-bold-13\"]<Pudim>[/font] oi"   lobby e configuração da partida
- *   "[color=\"255 0 0\"]Alice[/color]: oi"       sessão (nome na cor do jogador)
+ *   "[font=\"…\"]<[color=\"…\"]kyng (399)[/color]>[/font] oi"  lobby e configuração
+ *   "[color=\"255 0 0\"]Alice[/color]: oi"                     sessão
  *
- * As tags em volta do nome não são opcionais na prática: a lobby embrulha o
- * apelido em negrito (ChatMessageFormatSay.js aplica setStringTags com
- * font "sans-bold-13"). A primeira versão disto só aceitava "<Nome>" nu, e o
- * "[font=...]" na frente fazia a expressão falhar inteira — o apelido acabava
- * indo para o tradutor grudado na fala.
+ * Repare que na primeira forma as tags de cor ficam DENTRO dos sinais de menor
+ * e maior, e a de negrito por fora — é o que ClientChat.js monta: o apelido já
+ * vem colorido, o "<%(username)s>" o envolve, e só então vem o setStringTags do
+ * negrito.
  *
- * A segunda alternativa aceita tags no meio do nome também, alternando entre
- * "um par de colchetes inteiro" e "um caractere que não seja colchete nem
- * dois-pontos" até chegar nos dois-pontos.
+ * Por isso os quantificadores contam TAGS INTEIRAS como uma unidade, não
+ * caracteres. Contando caractere, as tags de cor sozinhas comiam quase trinta
+ * do orçamento e sobrava espaço para uns onze de nome: apelido curto como
+ * "kyng (399)" era reconhecido e "jagsusindia (ultra sexy)" não, e a fala
+ * simplesmente não respondia ao clique. O limite continua existindo, generoso,
+ * só para uma fala que por acaso tenha "<" e ">" no meio não ser confundida
+ * com um apelido gigante.
  */
 const PUDIM_TR_APELIDO =
-	/^((?:\[[^\]]*\])*\s*<[^>]{1,40}>\s*(?:\[[^\]]*\])*\s*|(?:\[[^\]]*\]|[^:\[\]]){1,60}:\s*)/;
+	/^((?:\[[^\]]*\])*\s*<(?:\[[^\]]*\]|[^>\[\]]){1,80}>\s*(?:\[[^\]]*\])*\s*|(?:\[[^\]]*\]|[^:\[\]]){1,60}:\s*)/;
 
 /**
  * Separa a fala em três partes:
