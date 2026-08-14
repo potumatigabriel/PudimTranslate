@@ -1,0 +1,20 @@
+# Quebras de linha por tipo de arquivo.
+#
+# O .sh e o motivo deste arquivo existir: com CRLF, o "#!/bin/sh" vira
+# "#!/bin/sh\r" e o Linux responde "bad interpreter" — o script simplesmente
+# nao roda. Como o repositorio e mantido no Windows, sem isto o Git converteria
+# na saida e quebraria todo mundo que baixasse em Linux ou macOS.
+*.sh text eol=lf
+*.py text eol=lf
+
+# Estes so rodam no Windows, onde CRLF e o esperado.
+*.bat text eol=crlf
+*.ps1 text eol=crlf
+
+# Codigo do mod e documentacao: LF, como o resto do projeto 0 A.D.
+*.js text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+
+# Imagens nao sao texto e nao podem ser convertidas.
+*.png binary

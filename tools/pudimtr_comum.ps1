@@ -1,5 +1,19 @@
 # PudimTranslate — funcoes compartilhadas pelo tradutor e pelo lancador.
 #
+# ATENCAO: existe uma segunda implementacao, em Python (pudim_tradutor.py e
+# jogar_0ad.py). Nao e duplicacao por descuido — e o que faz o mod funcionar sem
+# instalar nada em qualquer sistema: no Windows o PowerShell vem de fabrica e o
+# Python quase nunca esta; no Linux e no macOS e o contrario. Os lancadores
+# (.bat e .sh) escolhem a que a maquina tem.
+#
+# As duas falam o MESMO protocolo com o jogo, e mudar um lado sem mudar o outro
+# quebra metade dos usuarios em silencio. O que precisa bater:
+#   - pasta e nomes dos arquivos (saves/campaigns/pudim_tr_*.json)
+#   - resposta com 65536 bytes exatos, completada com espacos
+#   - "vivo" em segundos desde a epoca, em UTC
+#   - limpeza das tags do chat antes de traduzir
+#   - idioma tirado do campo "to" do pedido
+#
 # Escrito para o Windows PowerShell 5.1, o que vem de fabrica no Windows 10 e 11.
 # Nada aqui exige instalar coisa alguma: sem Python, sem .NET SDK, sem pacote
 # externo. Por isso tambem nao ha ternario, "?." nem outras coisas que so

@@ -14,10 +14,10 @@ the multiplayer lobby and in the match setup screen.
 
 Built for players who want to play multiplayer without being locked out of the conversation.
 
-> **Nothing to install.** No Python, no runtime, no package — the companion program is a PowerShell
-> script, and Windows PowerShell ships with Windows. No dependency on PudimMod either: the two are
-> independent, and running both together causes no conflict, because PudimTranslate keeps its
-> helpers in its own namespace (`pudimtr_*`).
+> **Nothing to install, on Windows, Linux or macOS** — the companion program ships in two versions,
+> PowerShell and Python, and the launcher uses whichever your system already has. No dependency on
+> PudimMod either: the two are independent, and running both together causes no conflict, because
+> PudimTranslate keeps its helpers in its own namespace (`pudimtr_*`).
 
 ---
 
@@ -30,7 +30,8 @@ startup, and never notices files that appear afterwards. If the translator is no
 when the game starts, the game cannot see the bridge at all and nothing will translate for that
 whole session. Closing and reopening 0 A.D. fixes it.
 
-**So do not launch 0 A.D. the usual way. Launch it with `tools/Play0AD.bat`**, which starts the
+**So do not launch 0 A.D. the usual way. Launch it with `tools/Play0AD.bat`** (or `tools/Play0AD.sh`
+on Linux and macOS), which starts the
 translator, waits for the bridge to be ready, opens the game, and shuts the translator down when you
 quit. One click, right order, nothing to remember.
 
@@ -79,9 +80,21 @@ common mistake is ending up with `mods/PudimTranslate/PudimTranslate/`.
 Then open 0 A.D., go to **Settings → Mod Selection**, pick **PudimTranslate**, click **Enable**,
 then **Save Configuration** and **Start Mods**.
 
-**Nothing to install.** The companion program is a PowerShell script, and Windows PowerShell ships
-with Windows 10 and 11 — no runtime, no interpreter, no package to add. The `.bat` files call it with
-`-ExecutionPolicy Bypass`, which applies to that one call and changes no system setting.
+**Nothing to install, on any system.** The companion program exists twice — once in PowerShell, once
+in Python — and the launcher picks whichever your machine already has. That is not accidental
+duplication: the native coverage is complementary.
+
+| System  | Launcher | Uses | Already installed? |
+|---------|----------|------|--------------------|
+| Windows | `tools\Play0AD.bat` | Windows PowerShell | Yes, ships with Windows 10 and 11 |
+| Linux   | `tools/Play0AD.sh` | Python 3 | Yes, in practically every distribution |
+| macOS   | `tools/Play0AD.sh` | Python 3 | Yes, with the command line tools |
+
+Each launcher falls back to the other runtime if the preferred one is missing. On Windows the `.bat`
+calls PowerShell with `-ExecutionPolicy Bypass`, which applies to that one call and changes no system
+setting. On Linux and macOS, give the `.sh` permission to run once with `chmod +x tools/Play0AD.sh`.
+
+The desktop shortcut is a Windows convenience and is simply skipped elsewhere.
 
 To update, replace the folder with the newer version and restart the game.
 

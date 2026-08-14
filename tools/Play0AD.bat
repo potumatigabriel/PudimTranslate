@@ -7,9 +7,38 @@ REM
 REM Na primeira vez ele cria um atalho "0 A.D. Translator" na area de trabalho,
 REM com o icone do jogo. Use esse atalho daqui em diante.
 REM
-REM Nao precisa instalar nada: usa o Windows PowerShell, que ja vem no Windows.
+REM Ha duas implementacoes, PowerShell e Python, e este arquivo escolhe a que a
+REM maquina tem. No Windows o PowerShell vem de fabrica, entao vem primeiro e
+REM nao e preciso instalar nada.
+REM
 REM O -ExecutionPolicy Bypass vale so para esta chamada e nao altera nenhuma
 REM configuracao do sistema.
 
 title PudimTranslate - abrindo o jogo
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Play0AD.ps1" %*
+
+where powershell >nul 2>&1
+if %errorlevel%==0 (
+	powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Play0AD.ps1" %*
+	goto fim
+)
+
+where py >nul 2>&1
+if %errorlevel%==0 (
+	py -3 "%~dp0jogar_0ad.py" %*
+	goto fim
+)
+
+where python >nul 2>&1
+if %errorlevel%==0 (
+	python "%~dp0jogar_0ad.py" %*
+	goto fim
+)
+
+echo.
+echo  Nao encontrei nem o PowerShell nem o Python neste computador.
+echo  O PowerShell vem com o Windows 10 e 11; se ele sumiu, instale o Python
+echo  em https://python.org/downloads (marque "Add Python to PATH").
+echo.
+pause
+
+:fim

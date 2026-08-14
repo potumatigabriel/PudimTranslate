@@ -65,9 +65,16 @@ Write-Host ""
 
 # O tradutor em janela propria, para o log de traducao ficar visivel — e util
 # para conferir que esta funcionando.
-$argsTradutor = @("-NoProfile", "-ExecutionPolicy", "Bypass",
-                  "-File", (Join-Path $PSScriptRoot "PudimTradutor.ps1"))
-if ($To) { $argsTradutor += @("-To", $To) }
+#
+# As aspas em volta do caminho sao obrigatorias, nao enfeite: o -ArgumentList do
+# Start-Process junta os elementos com espaco e NAO poe aspas em quem tem espaco
+# dentro. Sem elas, um caminho como "...\My Games\..." chega cortado no "My" e o
+# PowerShell responde que o arquivo nao tem extensao .ps1 — o tradutor morria na
+# largada, numa janela que fechava sozinha, e o jogo abria sem traducao sem
+# ninguem ver o erro.
+$scriptTradutor = Join-Path $PSScriptRoot "PudimTradutor.ps1"
+$argsTradutor = @("-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "`"$scriptTradutor`"")
+if ($To) { $argsTradutor += @("-To", "`"$To`"") }
 
 $tradutor = $null
 try {
@@ -75,6 +82,18 @@ try {
 } catch {
     Write-Host "[aviso] nao consegui ligar o tradutor: $($_.Exception.Message)"
     Write-Host "        O jogo abre assim mesmo, so nao traduz."
+    $tradutor = $null
+}
+
+# Se o tradutor caiu logo de cara, e melhor dizer agora do que deixar o jogador
+# descobrir no meio da partida que nada traduz.
+if ($tradutor) {
+    Start-Sleep -Milliseconds 700
+    if ($tradutor.HasExited) {
+        Write-Host "[aviso] o tradutor fechou sozinho logo apos abrir."
+        Write-Host "        Rode PudimTradutor.bat direto para ver a mensagem de erro."
+        $tradutor = $null
+    }
 }
 
 # Espera a ponte existir antes de abrir o jogo. No caso normal isso leva alguns
