@@ -435,21 +435,20 @@ function pudim_TrIniciar(objetoDoTique)
 
 	g_PudimTr.rodando = true;
 
-	// Cria os dois arquivos se ainda não existem.
+	// Cria só o arquivo de PEDIDO, e só se faltar. O de resposta é criado pelo
+	// tradutor ao ligar, e é de propósito que não o criemos aqui.
 	//
-	// Isso não é enfeite: o VFS do jogo indexa os diretórios ao carregar, e um
-	// arquivo que nasce depois disso pode não ser enxergado. Criando os dois
-	// aqui, o caminho já fica conhecido e o auxiliar só sobrescreve — e
-	// sobrescrita o hotload do VFS acompanha.
+	// O VFS do jogo guarda o tamanho do arquivo de quando indexou a pasta.
+	// Criar aqui um arquivo de resposta pequeno faria o jogo guardar esse
+	// tamanho e, quando o tradutor gravasse a versão cheia, a leitura pararia no
+	// tamanho antigo — JSON cortado no meio, "unterminated string". Por isso o
+	// arquivo de resposta tem tamanho fixo, e quem o define é sempre o tradutor.
 	//
-	// A condição do FileExists importa: se o tradutor já estava rodando com
-	// traduções na mão, gravar por cima apagaria tudo.
+	// O pedido não sofre disso: só o jogo escreve nele, e escrever não passa
+	// pelo tamanho guardado.
 	try {
 		if (!Engine.FileExists(PUDIM_TR_REQ))
 			Engine.WriteJSONFile(PUDIM_TR_REQ, { "items": [], "t": Date.now() });
-
-		if (!Engine.FileExists(PUDIM_TR_RES))
-			Engine.WriteJSONFile(PUDIM_TR_RES, { "done": {}, "vivo": 0 });
 	} catch (e) {
 		warn("PudimTranslate: não consegui preparar a ponte de tradução: " + e);
 	}

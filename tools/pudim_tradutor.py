@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-PudimMod — Tradutor de chat (programa auxiliar)
+PudimTranslate — Tradutor de chat (programa auxiliar)
 
 Por que este programa existe
 ----------------------------
@@ -65,6 +65,11 @@ CACHE_FILE = "pudim_tr_cache.json"
 
 POLL_SECONDS = 0.3
 CACHE_MAX = 4000
+
+# Tamanho fixo do arquivo de resposta, em bytes. Ver gravar_resposta() para o
+# porque. 64 KB cabem algumas centenas de falas traduzidas — muito mais do que
+# uma partida produz — e ocupam nada no disco.
+TAMANHO_RESPOSTA = 65536
 
 GTX_URL = "https://translate.googleapis.com/translate_a/single"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
@@ -230,10 +235,49 @@ def gravar_json_atomico(caminho, dados):
     e a chance de pegar uma escrita no meio e real. os.replace e atomico no
     Windows e no Linux.
     """
+    gravar_bytes_atomico(caminho, json.dumps(dados, ensure_ascii=False).encode("utf-8"))
+
+
+def gravar_bytes_atomico(caminho, bruto):
     temporario = caminho + ".tmp"
-    with open(temporario, "w", encoding="utf-8") as arquivo:
-        json.dump(dados, arquivo, ensure_ascii=False)
+    with open(temporario, "wb") as arquivo:
+        arquivo.write(bruto)
     os.replace(temporario, caminho)
+
+
+def gravar_resposta(caminho, respostas, vivo):
+    """
+    Grava a resposta SEMPRE com o mesmo tamanho em bytes, completando com
+    espacos ate TAMANHO_RESPOSTA.
+
+    Isto nao e capricho. O VFS do 0 A.D. guarda o tamanho do arquivo de quando
+    indexou a pasta; quando o arquivo cresce, a leitura para no tamanho antigo e
+    o jogo recebe o JSON cortado no meio — "JSON.parse: unterminated string".
+    Com tamanho fixo, o valor guardado nunca fica errado.
+
+    Espaco depois do JSON e valido: JSON.parse ignora espaco em branco no fim.
+
+    Se as traducoes nao couberem, as mais antigas sao descartadas. O jogo guarda
+    em memoria tudo o que ja recebeu, entao perder as antigas daqui nao apaga
+    nada da tela — e o que ainda estiver pendente vai ser pedido de novo.
+    """
+    itens = list(respostas.items())
+
+    while True:
+        bruto = json.dumps({"done": dict(itens), "vivo": vivo},
+                           ensure_ascii=False).encode("utf-8")
+        if len(bruto) <= TAMANHO_RESPOSTA or not itens:
+            break
+        # Descarta um quarto dos mais antigos por vez, para nao ficar tentando
+        # um item de cada vez num arquivo grande.
+        itens = itens[max(1, len(itens) // 4):]
+
+    if len(bruto) > TAMANHO_RESPOSTA:
+        # So acontece se uma unica traducao for gigante; melhor mandar vazio do
+        # que mandar cortado.
+        bruto = json.dumps({"done": {}, "vivo": vivo}).encode("utf-8")
+
+    gravar_bytes_atomico(caminho, bruto + b" " * (TAMANHO_RESPOSTA - len(bruto)))
 
 
 def podar_cache(cache):
@@ -255,7 +299,7 @@ def main():
         pass
 
     analisador = argparse.ArgumentParser(
-        description="Traduz o chat do 0 A.D. para o PudimMod."
+        description="Traduz o chat do 0 A.D. para o PudimTranslate."
     )
     analisador.add_argument("--dir", help="Pasta de dados do 0 A.D. (onde ficam mods/ e saves/)")
     analisador.add_argument("--to", default="pt", help="Idioma de destino (padrao: pt)")
@@ -278,7 +322,7 @@ def main():
     for chave, valor in cache.items():
         respostas.setdefault(chave, valor)
 
-    print("PudimMod — tradutor de chat")
+    print("PudimTranslate — tradutor de chat")
     print(f"  pasta do jogo : {userdata}")
     print(f"  ponte         : {pasta}")
     print(f"  idioma destino: {argumentos.to} (o jogo pode pedir outro)")
@@ -287,7 +331,7 @@ def main():
 
     # Deixa um res.json valido no lugar ja na largada. O mod precisa que o
     # arquivo exista antes de tentar ler.
-    gravar_json_atomico(caminho_res, {"done": respostas, "vivo": int(time.time())})
+    gravar_resposta(caminho_res, respostas, int(time.time()))
 
     ultima_modificacao = 0
     ultimo_sinal = 0
@@ -300,7 +344,7 @@ def main():
             # Sinal de vida a cada 5s: e assim que o mod sabe que o tradutor
             # esta ligado e pode mostrar o botao habilitado.
             if agora - ultimo_sinal >= 5:
-                gravar_json_atomico(caminho_res, {"done": respostas, "vivo": int(agora)})
+                gravar_resposta(caminho_res, respostas, int(agora))
                 ultimo_sinal = agora
 
             try:
@@ -352,7 +396,7 @@ def main():
             if novidade:
                 cache = podar_cache(cache)
                 gravar_json_atomico(caminho_cache, cache)
-                gravar_json_atomico(caminho_res, {"done": respostas, "vivo": int(time.time())})
+                gravar_resposta(caminho_res, respostas, int(time.time()))
                 ultimo_sinal = time.time()
 
             time.sleep(POLL_SECONDS)

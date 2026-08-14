@@ -1,8 +1,8 @@
 @echo off
-REM PudimMod - atalho para ligar o tradutor de chat.
+REM PudimTranslate - atalho para ligar o tradutor de chat.
 REM Deixe esta janela aberta enquanto joga. Feche com Ctrl+C ou no X.
 
-title PudimMod - Tradutor de chat
+title PudimTranslate - Tradutor de chat
 cd /d "%~dp0"
 
 REM O py.exe (Python Launcher) e a forma mais confiavel no Windows: acha a

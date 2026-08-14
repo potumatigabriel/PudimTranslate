@@ -27,9 +27,11 @@ proximas vezes nao precisa mais.
 """
 
 import argparse
+import importlib.util
 import os
 import subprocess
 import sys
+import time
 
 AQUI = os.path.dirname(os.path.abspath(__file__))
 ARQUIVO_CAMINHO = os.path.join(AQUI, "caminho_do_jogo.txt")
@@ -132,6 +134,23 @@ def achar_jogo(preferido=None):
     return None
 
 
+def userdata_do_tradutor():
+    """
+    Pasta de dados do 0 A.D., pela mesma logica que o tradutor usa.
+
+    Reaproveita achar_userdata de pudim_tradutor.py em vez de repetir a
+    deteccao: uma copia divergente daria dois palpites diferentes na mesma
+    maquina, e o atalho ficaria esperando um arquivo em pasta errada.
+    """
+    try:
+        spec = importlib.util.spec_from_file_location("pudim_tradutor", TRADUTOR)
+        modulo = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(modulo)
+        return modulo.achar_userdata(None)
+    except Exception:
+        return ""
+
+
 def guardar_caminho(caminho):
     try:
         with open(ARQUIVO_CAMINHO, "w", encoding="utf-8") as arquivo:
@@ -191,6 +210,19 @@ def main():
         print(f"[aviso] nao consegui ligar o tradutor: {erro}")
         print("        O jogo abre assim mesmo, so nao traduz.")
         tradutor = None
+
+    # Um instante antes de abrir o jogo, de proposito. O VFS do 0 A.D. indexa a
+    # pasta ao iniciar e nao enxerga arquivo que nasca depois; se o jogo subir
+    # antes de o tradutor criar o arquivo de resposta, ele nunca vai encontra-lo
+    # nesta sessao. Esperar o arquivo aparecer resolve, e no caso normal isso
+    # leva alguns centesimos.
+    if tradutor:
+        caminho_resposta = os.path.join(
+            userdata_do_tradutor(), "saves", "campaigns", "pudim_tr_res.json")
+        for _ in range(40):  # no maximo 4s; depois abre assim mesmo
+            if os.path.isfile(caminho_resposta):
+                break
+            time.sleep(0.1)
 
     # O que vier depois de "--" e do jogo, nao nosso.
     extras = [a for a in argumentos.resto if a != "--"]
