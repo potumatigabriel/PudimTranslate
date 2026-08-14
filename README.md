@@ -14,9 +14,10 @@ the multiplayer lobby and in the match setup screen.
 
 Built for players who want to play multiplayer without being locked out of the conversation.
 
-> **No dependencies beyond 0 A.D. itself** — and none on PudimMod either. The two are independent;
-> running both together causes no conflict, because PudimTranslate keeps its helpers in its own
-> namespace (`pudimtr_*`).
+> **Nothing to install.** No Python, no runtime, no package — the companion program is a PowerShell
+> script, and Windows PowerShell ships with Windows. No dependency on PudimMod either: the two are
+> independent, and running both together causes no conflict, because PudimTranslate keeps its
+> helpers in its own namespace (`pudimtr_*`).
 
 ---
 
@@ -50,7 +51,7 @@ kept out of the repository, so nobody inherits somebody else's install path. If 
 unusual and the search fails, run it once with the path and it is remembered from then on:
 
 ```
-python tools/jogar_0ad.py --jogo "C:\your\path\to\pyrogenesis.exe"
+powershell -File tools\Play0AD.ps1 -Jogo "C:\your\path\to\pyrogenesis.exe"
 ```
 
 If you prefer to keep the two apart, run `tools/PudimTradutor.bat`, leave its window open, and only
@@ -78,8 +79,9 @@ common mistake is ending up with `mods/PudimTranslate/PudimTranslate/`.
 Then open 0 A.D., go to **Settings → Mod Selection**, pick **PudimTranslate**, click **Enable**,
 then **Save Configuration** and **Start Mods**.
 
-**Python is required** for the translator — the mod itself needs nothing extra. If you do not have
-it, get it at <https://python.org/downloads> and tick *Add Python to PATH* during setup.
+**Nothing to install.** The companion program is a PowerShell script, and Windows PowerShell ships
+with Windows 10 and 11 — no runtime, no interpreter, no package to add. The `.bat` files call it with
+`-ExecutionPolicy Bypass`, which applies to that one call and changes no system setting.
 
 To update, replace the folder with the newer version and restart the game.
 
@@ -145,7 +147,7 @@ What a mod *can* do is read and write files. So the mod writes the phrase to a f
 program translates it, and writes the answer back:
 
 ```
-mod  --writes-->  saves/campaigns/pudim_tr_req.json  --reads-->  pudim_tradutor.py  --HTTP--> Google
+mod  --writes-->  saves/campaigns/pudim_tr_req.json  --reads-->  PudimTradutor.ps1  --HTTP--> Google
 mod  <---reads--  saves/campaigns/pudim_tr_res.json  <--writes-------'
 ```
 

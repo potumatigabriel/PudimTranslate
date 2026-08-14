@@ -1,30 +1,18 @@
 @echo off
-REM PudimTranslate - atalho para ligar o tradutor de chat.
-REM Deixe esta janela aberta enquanto joga. Feche com Ctrl+C ou no X.
+REM PudimTranslate - liga so o tradutor de chat.
+REM
+REM Para jogar, prefira o Play0AD.bat: ele abre o tradutor E o jogo, na ordem
+REM certa. Este aqui e para quem quer os dois separados.
+REM
+REM Nao precisa instalar nada: usa o Windows PowerShell, que ja vem no Windows.
+REM O -ExecutionPolicy Bypass vale so para esta chamada e nao altera nenhuma
+REM configuracao do sistema.
 
 title PudimTranslate - Tradutor de chat
-cd /d "%~dp0"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0PudimTradutor.ps1" %*
 
-REM O py.exe (Python Launcher) e a forma mais confiavel no Windows: acha a
-REM versao instalada mesmo quando "python" nao esta no PATH.
-where py >nul 2>&1
-if %errorlevel%==0 (
-	py -3 pudim_tradutor.py %*
-	goto fim
+if errorlevel 1 (
+	echo.
+	echo  O tradutor terminou com erro. A mensagem acima diz o motivo.
+	pause
 )
-
-where python >nul 2>&1
-if %errorlevel%==0 (
-	python pudim_tradutor.py %*
-	goto fim
-)
-
-echo.
-echo  Python nao encontrado.
-echo  Instale em https://python.org/downloads (marque "Add Python to PATH")
-echo  e rode este arquivo de novo.
-echo.
-
-:fim
-echo.
-pause
