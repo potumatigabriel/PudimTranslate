@@ -158,8 +158,12 @@ function pudim_TrDecorar(chatMessage)
 
 /**
  * Modo "traduzir tudo": em vez de clicar fala por fala, toda mensagem que
- * chega já vem traduzida. Guardado na config do usuário, então sobrevive entre
- * partidas.
+ * chega já vem traduzida. Lido da config do usuário ("pudimtranslate.auto"),
+ * então sobrevive entre partidas.
+ *
+ * Vale só dentro da partida. Na lobby e na configuração o clique continua sendo
+ * o único caminho — lá o chat é uma lista, e traduzir tudo o que chega numa sala
+ * cheia seria uma ida à rede por linha, quase sempre desperdiçada.
  */
 function pudim_TrTraduzirTudoLigado()
 {
@@ -168,35 +172,6 @@ function pudim_TrTraduzirTudoLigado()
 	} catch (e) {
 		return false;
 	}
-}
-
-function pudim_TrAlternarTraduzirTudo()
-{
-	const novo = !pudim_TrTraduzirTudoLigado();
-	Engine.ConfigDB_CreateAndSaveValue("user", "pudimtranslate.auto", String(novo));
-
-	// Aplica o modo novo ao que já está na tela, em vez de valer só para a
-	// próxima fala — senão parece que o botão não fez nada.
-	for (const linha of g_PudimTrLinhas)
-	{
-		if (novo)
-		{
-			if (linha.pudimTraducao)
-				linha.pudimEstado = "traduzido";
-			else if (linha.pudimEstado == "original")
-			{
-				pudim_TrPedir(linha.pudimTextoLimpo);
-				linha.pudimEstado = pudim_TrEstaVivo() ? "esperando" : "semTradutor";
-			}
-		}
-		else if (linha.pudimEstado == "traduzido")
-			linha.pudimEstado = "original";
-
-		pudim_TrRedesenharLinha(linha);
-	}
-
-	g_Chat.ChatOverlay.displayChatMessages();
-	return novo;
 }
 
 // ─── Chegada das traduções ────────────────────────────────────────────────────

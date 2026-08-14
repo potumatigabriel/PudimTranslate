@@ -25,11 +25,27 @@ whole session. Closing and reopening 0 A.D. fixes it.
 translator, waits for the bridge to be ready, opens the game, and shuts the translator down when you
 quit. One click, right order, nothing to remember.
 
-The first time it runs, it puts a **`0 A.D. Translator` shortcut on your desktop** — with the 0 A.D.
-icon and the correct path for your machine — so you never have to find the folder again. Use that
-shortcut from then on, in place of your normal 0 A.D. shortcut.
+**The first time you run it, `Play0AD.bat` creates a `0 A.D. Translator` shortcut on your desktop**,
+carrying the 0 A.D. icon so it sits recognisably next to the game's own shortcut. Use it from then
+on, in place of your normal 0 A.D. shortcut, and you are done — one click starts everything in the
+right order.
 
-If you prefer to keep them apart, run `tools/PudimTradutor.bat`, leave its window open, and only
+The `.bat` file itself will always show the plain Windows script icon. That is not something a mod
+can change: Windows takes a `.bat` icon from the file *type*, not from the file, so only a shortcut
+can carry a custom one. That is precisely why the shortcut is created for you.
+
+Both the shortcut and the launcher work out where 0 A.D. is installed on their own — they look in the
+usual install locations, in the Steam libraries, and finally read the target of the Start Menu
+shortcut the installer left behind. The path found is remembered in `tools/caminho_do_jogo.txt`, next
+to the scripts, so the search happens only once. That file is machine-specific and is deliberately
+kept out of the repository, so nobody inherits somebody else's install path. If the game is somewhere
+unusual and the search fails, run it once with the path and it is remembered from then on:
+
+```
+python tools/jogar_0ad.py --jogo "C:\your\path\to\pyrogenesis.exe"
+```
+
+If you prefer to keep the two apart, run `tools/PudimTradutor.bat`, leave its window open, and only
 then open 0 A.D. yourself.
 
 ---
@@ -75,8 +91,7 @@ translated and what was already in English:
 
 ![The same line, translated](docs/lobby-depois.png)
 
-**Click it again to get the original back.** Nothing is lost — the English is also kept in the
-tooltip, so hovering the translated line shows what was really said.
+**Click it again to get the original back.** Nothing is lost.
 
 It works the same in the match setup screen, where most of the talking happens before a game. Here a
 whole conversation is in English:
@@ -87,7 +102,8 @@ Click any lines you want. Each one is independent, so you can translate only wha
 
 ![Several lines translated](docs/partida-depois.png)
 
-In a match it is the same gesture: click the chat line on screen.
+In a match it is the same gesture: click the chat line on screen. There the line also carries a
+tooltip, so hovering a translated message shows the original English without switching it back.
 
 A few things worth knowing:
 
@@ -100,7 +116,8 @@ A few things worth knowing:
   *well played* never hit the network again.
 
 **Do not want to click at all?** Set `pudimtranslate.auto` to `true` in the user config and every
-incoming message is translated as it arrives.
+incoming message is translated as it arrives. This applies **inside a match only** — in the lobby and
+the match setup screen you still click the messages you want.
 
 **The target language follows the game.** Whatever locale 0 A.D. runs in is what you get back — play
 in Spanish and the chat comes back in Spanish, with nothing to configure. The source language is
@@ -150,7 +167,10 @@ message to translate it.
 
 The chat messages you choose to translate are sent to Google Translate. Nothing else leaves your
 machine, and nothing is sent until you click a message — unless you turn on `pudimtranslate.auto`,
-in which case every incoming chat message is sent as it arrives.
+in which case every chat message that arrives during a match is sent as it arrives.
+
+System notices are never sent at all, and a phrase already in the on-disk cache is answered locally,
+without touching the network.
 
 ## Language
 
