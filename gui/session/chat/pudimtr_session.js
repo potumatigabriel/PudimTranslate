@@ -265,7 +265,16 @@ pudimtr_patchApplyN("init", function(target, that, args)
 	const resultado = target.apply(that, args);
 
 	try {
-		pudim_TrIniciar();
+		// O laço se pendura no onTick do painel do chat, o mesmo objeto que
+		// existe nas três telas. Aqui os setTimeout da GUI funcionam (session.js
+		// chama updateTimers), mas os dois caminhos convivem sem custo — passam
+		// pelo mesmo freio de tempo.
+		let painel = null;
+		try {
+			painel = Engine.GetGUIObjectByName("chatPanel");
+		} catch (e) {}
+
+		pudim_TrIniciar(painel);
 
 		// Decoramos a mensagem antes de o overlay guardá-la: o objeto que
 		// chega aqui é o mesmo que ele vai desenhar, então o callback já entra

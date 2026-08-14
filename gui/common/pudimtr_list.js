@@ -99,7 +99,10 @@ function pudim_TrListaClicar()
 	}
 
 	const partes = pudim_TrPartes(g_PudimTrLista.originais[indice]);
-	if (!partes.dito)
+
+	// Linha sem apelido é aviso do sistema ("== Fulano entrou."), que o jogo já
+	// entrega no idioma do jogador. Clicar nela não faz nada.
+	if (!partes.dito || !partes.temApelido)
 		return;
 
 	if (pudim_TrPedir(partes.dito))
@@ -125,7 +128,14 @@ function pudim_TrListaLigar(lista)
 	g_PudimTrLista.ligado = true;
 	g_PudimTrLista.lista = lista;
 
-	pudim_TrIniciar();
+	// O laço se pendura no onTick do painel do chat. Na lobby isso é o que faz
+	// a resposta do tradutor chegar: lá os setTimeout da GUI não avançam.
+	let painel = null;
+	try {
+		painel = Engine.GetGUIObjectByName("chatPanel");
+	} catch (e) {}
+
+	pudim_TrIniciar(painel);
 	pudim_TrAoTraduzir(pudim_TrListaRedesenhar);
 
 	// A lista não tinha handler de seleção; se um dia passar a ter, encadeamos
