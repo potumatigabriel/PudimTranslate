@@ -283,6 +283,40 @@ def gravar_bytes_atomico(caminho, bruto):
     os.replace(temporario, caminho)
 
 
+def gravar_bytes_no_lugar(caminho, bruto):
+    """
+    Reescreve o arquivo por cima, SEM trocar a entrada de diretorio.
+
+    os.replace e atomico e evita leitura pela metade, mas troca a entrada de
+    diretorio. O VFS do 0 A.D. guarda a entrada de quando indexou a pasta, e
+    depois do replace ela aponta para um arquivo que nao existe mais: o jogo
+    imprime "CVFSFile: file saves/campaigns/pudim_tr_res.json couldn't be opened
+    (vfs_load: -110300)" em vermelho por cima da tela, mesmo com o arquivo ali no
+    disco. Foi o relato de 19/08, no lobby.
+
+    Como a resposta tem SEMPRE o mesmo tamanho (TAMANHO_RESPOSTA, completado com
+    espacos), da para reescrever por cima: o arquivo continua sendo o mesmo, a
+    entrada do VFS continua valida e o tamanho que ele guardou continua certo.
+
+    Em troca, a leitura pode pegar o arquivo no meio da escrita. Isso o lado do
+    jogo ja trata: JSON invalido cai no catch de pudim_TrLerResposta e a leitura
+    seguinte resolve — bem melhor que um erro vermelho na tela.
+
+    Se o arquivo nao existir ainda, ou estiver com outro tamanho, cai no replace:
+    ai a entrada precisa mesmo ser criada ou corrigida.
+    """
+    try:
+        if os.path.getsize(caminho) != len(bruto):
+            gravar_bytes_atomico(caminho, bruto)
+            return
+        with open(caminho, "r+b") as arquivo:
+            arquivo.write(bruto)
+            arquivo.flush()
+            os.fsync(arquivo.fileno())
+    except (FileNotFoundError, OSError):
+        gravar_bytes_atomico(caminho, bruto)
+
+
 def gravar_resposta(caminho, respostas, vivo):
     """
     Grava a resposta SEMPRE com o mesmo tamanho em bytes, completando com
@@ -315,7 +349,7 @@ def gravar_resposta(caminho, respostas, vivo):
         # que mandar cortado.
         bruto = json.dumps({"done": {}, "vivo": vivo}).encode("utf-8")
 
-    gravar_bytes_atomico(caminho, bruto + b" " * (TAMANHO_RESPOSTA - len(bruto)))
+    gravar_bytes_no_lugar(caminho, bruto + b" " * (TAMANHO_RESPOSTA - len(bruto)))
 
 
 def podar_cache(cache):

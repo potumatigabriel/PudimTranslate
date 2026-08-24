@@ -48,6 +48,14 @@ const PUDIM_TR_INTERVALO = 500;
 const PUDIM_TR_INTERVALO_OCIOSO = 3000;
 
 /**
+ * Quanto esperar depois de uma leitura que falhou, antes de tentar de novo.
+ * 2s é curto o bastante para a tradução não parecer travada e longo o bastante
+ * para não repetir o erro do motor várias vezes por segundo.
+ */
+const PUDIM_TR_RECUO_FALHA = 2000;
+var g_PudimTrLeituraBloqueadaAte = 0;
+
+/**
  * O tradutor regrava res.json a cada 5s como sinal de vida. Se o carimbo está
  * mais velho que isto, consideramos que ele foi fechado.
  */
@@ -304,6 +312,17 @@ function pudim_TrEnviarPedido()
  */
 function pudim_TrLerResposta()
 {
+	// Recuo depois de uma falha de leitura. O erro que aparece na tela
+	// ("CVFSFile: file ... couldn't be opened") é impresso pelo MOTOR, dentro do
+	// ReadJSONFile — o try/catch abaixo pega a exceção em JS, mas a linha vermelha
+	// já foi escrita. A única forma de não vê-la é não insistir: falhou, espera.
+	// A causa raiz está no tradutor (ver gravar_bytes_no_lugar em
+	// tools/pudim_tradutor.py); isto aqui é a segunda linha de defesa, para o caso
+	// de estar rodando com uma versão antiga dele.
+	const agoraLeitura = Date.now();
+	if (g_PudimTrLeituraBloqueadaAte > agoraLeitura)
+		return [];
+
 	let dados = null;
 	try {
 		if (!Engine.FileExists(PUDIM_TR_RES))
@@ -312,11 +331,14 @@ function pudim_TrLerResposta()
 	} catch (e) {
 		// Arquivo pego no meio de uma escrita, ou JSON quebrado. A próxima
 		// leitura resolve — não vale poluir o log a cada 500ms.
+		g_PudimTrLeituraBloqueadaAte = agoraLeitura + PUDIM_TR_RECUO_FALHA;
 		return [];
 	}
-
-	if (!dados)
+	if (!dados) {
+		// ReadJSONFile devolve null quando o motor não conseguiu abrir o arquivo.
+		g_PudimTrLeituraBloqueadaAte = agoraLeitura + PUDIM_TR_RECUO_FALHA;
 		return [];
+	}
 
 	if (dados.vivo)
 		g_PudimTr.vivoEm = dados.vivo;
