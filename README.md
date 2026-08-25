@@ -275,11 +275,36 @@ submitted.
 **4. The dictionary again, partially.** Whatever it knows gets translated, the rest is left as it
 came, and the count is shown: `(dicionario, 5 de 7 palavras)`. Half a readable line beats silence.
 
-The dictionary lives in `tools/pudimtr_dicionario.json` — 279 concepts covering greetings, combat,
-units, buildings, resources, map directions, colours, lobby vocabulary and chat slang, in English,
-Portuguese and Spanish. The source language is not in the request, so it tries all three and keeps
-whichever recognises more words. Adding an entry is editing one JSON file; both implementations
-read the same one.
+### Two dictionaries, and why they are separate
+
+`tools/pudimtr_dicionario.json` — **game slang**, 279 concepts, hand-written, in English, Portuguese
+and Spanish. It is hand-written because there is nothing to copy: `gg`, `wp`, `afk` and `glhf` have
+Wiktionary entries but no usable translation table, and the free abbreviation lists on GitHub are
+either tiny, abandoned since 2018, or declare no licence at all. This is the file that beats Google,
+and it is the one consulted before the network.
+
+`tools/dicionario/wikdict-*.json.gz` — **general vocabulary**, ~250,000 word pairs across the six
+directions, extracted from Wiktionary via DBnary and WikDict. 1.7 MB compressed, loaded lazily and
+only in the direction actually needed. Measured against 32 real chat lines from a match, the slang
+file alone covered 41% of the words; with this one, 64%. The rest is player names and typos, which
+no dictionary will ever cover.
+
+**These files carry a different licence from the rest of the mod** — CC BY-SA 3.0, not GPL. See
+`tools/dicionario/ATTRIBUTION.md`, which is required to stay with them.
+
+The general vocabulary is deliberately **not** used in the fast path. The fast path exists because
+the mod's slang beats a general translator; for ordinary vocabulary the opposite is true — Google is
+better *and* conjugates. Letting WikDict into the fast path would take from Google exactly the lines
+it translates best.
+
+One consequence worth knowing: a bigger dictionary makes language detection *harder*, not easier.
+With 279 concepts, reading Portuguese as Spanish was rare; with 70,000 words, `"brincadeira nao se
+preocupe"` came out as `"brincadeira nau SE preocupe"` because `nao` and `se` exist in both. The
+detector now also measures how much the text looks like the *target* language, and leaves it alone
+when it already is.
+
+The source language is not in the request, so it tries all three and keeps whichever recognises
+more words.
 
 **Microsoft Translator and Amazon Translate are not options.** Microsoft needs an Azure key — the
 keyless endpoint that Edge used (`edge.microsoft.com/translate/auth`) now returns 404. Amazon

@@ -254,6 +254,25 @@ def achar_userdata(preferido=None):
 # quis dizer. Por isso ele e consultado ANTES das APIs quando cobre a frase inteira:
 # alem de acertar mais, sai instantaneo e nao gasta cota nenhuma.
 DICIONARIO_ARQUIVO = "pudimtr_dicionario.json"
+
+# ─── Vocabulario geral, do WikDict ────────────────────────────────────────────
+#
+# O dicionario de giria acima e escrito a mao e cobre o que nenhuma base publica cobre. O
+# problema e que ele so cobre ISSO: medido contra 32 linhas reais de chat do jogador, dava
+# 41% das palavras, e o chat de verdade e conversa, nao comando — "adamus, de onde es?",
+# "brincadeira, nao se preocupe", "e uma loucura como os bons jogadores ficaram".
+#
+# Os arquivos wikdict-*.json.gz sao vocabulario geral extraido do Wiktionary. Com eles a
+# cobertura das mesmas 32 linhas foi para 69%.
+#
+# ELES SO VALEM PARA O PLANO C, e isso e deliberado. O atalho offline existe porque em
+# giria o dicionario acerta MAIS que o Google; em vocabulario geral acontece o contrario —
+# o Google acerta mais E conjuga. Deixar o WikDict entrar no atalho roubaria do Google
+# justamente as frases que ele traduz melhor.
+#
+# LICENCA DIFERENTE DA DO MOD: CC BY-SA 3.0. Ver tools/dicionario/ATTRIBUTION.md.
+WIKDICT_PASTA = "dicionario"
+WIKDICT_IDIOMAS = ("en", "pt", "es")
 DIC_MAX_PALAVRAS = 3   # maior forma composta buscada ("good game" = 2, "how many" = 2)
 # Ate quantas palavras o atalho offline pode resolver sozinho.
 #
@@ -270,6 +289,40 @@ DIC_MAX_ATALHO = 4
 
 # {idioma: {forma_normalizada: indice_do_conceito}} e a lista de conceitos.
 _dic = {"conceitos": [], "formas": {}, "carregado": False}
+
+# {"en-pt": {palavra: traducao}} — carregado sob demanda, so a direcao que for usada.
+_wikdict = {}
+
+
+def carregar_wikdict(origem, destino):
+    """
+    Tabela do WikDict para uma direcao. Carrega na primeira vez e guarda.
+
+    So a direcao pedida e lida: para traduzir PARA portugues bastam en-pt e es-pt, entao
+    nao ha motivo para abrir os seis arquivos e segurar 250 mil pares em memoria.
+    """
+    par = "%s-%s" % (origem, destino)
+    if par in _wikdict:
+        return _wikdict[par]
+    _wikdict[par] = {}
+    caminho = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                           WIKDICT_PASTA, "wikdict-%s.json.gz" % par)
+    print("  carregando vocabulario geral (%s), um momento..." % par)
+    try:
+        import gzip
+        with gzip.open(caminho, "rb") as f:
+            bruto = json.loads(f.read().decode("utf-8"))
+        # Minusculo na saida quando a chave era minuscula: o WikDict guarda a grafia
+        # original, entao havia palavra comum voltando gritada ("se" -> "SE") por causa de
+        # uma entrada de nome proprio.
+        _wikdict[par] = {}
+        for k, v in bruto.items():
+            if not k or not v:
+                continue
+            _wikdict[par][_dic_normalizar(k)] = v.lower() if k == k.lower() else v
+    except Exception as erro:
+        registrar("wikdict %s nao carregado: %s" % (par, str(erro)[:120]))
+    return _wikdict[par]
 
 
 def _dic_normalizar(palavra):
@@ -308,9 +361,31 @@ def carregar_dicionario(pasta_do_script=None):
     return _dic
 
 
-def traduzir_pelo_dicionario(texto, destino):
+def vocabulario_do_idioma(idioma, usar_geral):
+    """
+    Conjunto de palavras conhecidas de um idioma, para responder "este texto ja esta nesta
+    lingua?".
+
+    As chaves de um arquivo do WikDict sao palavras do idioma de ORIGEM daquele par, entao
+    qualquer par que comece no idioma pedido serve como vocabulario dele.
+    """
+    chave = "_vocab_%s_%s" % (idioma, "g" if usar_geral else "s")
+    if chave in _wikdict:
+        return _wikdict[chave]
+    vocab = set(_dic["formas"].get(idioma, {}).keys())
+    if usar_geral:
+        outro = "en" if idioma != "en" else "pt"
+        vocab |= set(carregar_wikdict(idioma, outro).keys())
+    _wikdict[chave] = vocab
+    return vocab
+
+
+def traduzir_pelo_dicionario(texto, destino, usar_geral=False):
     """
     Devolve (texto_traduzido, palavras_traduzidas, palavras_no_total).
+
+    usar_geral liga o vocabulario do WikDict. Fica DESLIGADO no atalho offline e ligado
+    so no plano C — ver o comentario em WIKDICT_PASTA para o porque.
 
     Nao tenta ser um tradutor: nao conjuga, nao concorda genero, nao reordena. Troca
     palavra por palavra e preserva o que nao conhece. O idioma de origem nao vem no
@@ -330,6 +405,8 @@ def traduzir_pelo_dicionario(texto, destino):
 
     def tentar(idioma):
         tabela = d["formas"].get(idioma, {})
+        # O WikDict so entra no plano C. No atalho a giria tem de decidir sozinha.
+        geral = carregar_wikdict(idioma, destino) if usar_geral else {}
         saida, traduzidas, i = [], 0, 0
         while i < len(palavras):
             achou = False
@@ -337,9 +414,17 @@ def traduzir_pelo_dicionario(texto, destino):
             for tam in range(min(DIC_MAX_PALAVRAS, len(palavras) - i), 0, -1):
                 grupo = palavras[i:i + tam]
                 chave = " ".join(_dic_normalizar(w) for w in grupo)
-                if not chave or chave not in tabela:
+                # A GIRIA VEM PRIMEIRO, sempre. "gg" existe nas duas tabelas e no WikDict
+                # sai como as duas letras; quem sabe que ali quer dizer "bom jogo" e o
+                # dicionario escrito a mao. Vocabulario geral e o fallback dele, nao o
+                # contrario.
+                if chave and chave in tabela:
+                    formas = d["conceitos"][tabela[chave]].get(destino, [])
+                elif tam == 1 and chave and chave in geral:
+                    # O WikDict so tem pares de palavra unica — grupo composto nao existe la.
+                    formas = [geral[chave]]
+                else:
                     continue
-                formas = d["conceitos"][tabela[chave]].get(destino, [])
                 if not formas:
                     continue
                 # Pontuacao que fechava o grupo volta colada, senao "attack!" vira
@@ -359,13 +444,37 @@ def traduzir_pelo_dicionario(texto, destino):
                 i += 1
         return (" ".join(saida), traduzidas)
 
-    melhor_texto, melhor_n, melhor_idioma = texto, 0, None
+    melhor_texto, melhor_n = texto, 0
     for idioma in ("en", "pt", "es"):
         if idioma == destino:
             continue   # traduzir para o proprio idioma nao faz sentido
         t, n = tentar(idioma)
         if n > melhor_n:
-            melhor_texto, melhor_n, melhor_idioma = t, n, idioma
+            melhor_texto, melhor_n = t, n
+
+    # TEXTO QUE JA ESTA NO IDIOMA DE DESTINO NAO PODE SER "TRADUZIDO".
+    #
+    # A deteccao escolhe o idioma que reconhece mais palavras, mas ela nunca testava o
+    # PROPRIO destino — o codigo pula `idioma == destino` porque traduzir para a mesma
+    # lingua nao faz sentido. Com o dicionario pequeno isso passava despercebido; com
+    # 70 mil palavras do WikDict, nao:
+    #
+    #     "brincadeira nao se preocupe"  ->  "brincadeira nau SE preocupe"
+    #
+    # Portugues lido como espanhol, porque "nao"/"se" existem nas duas linguas. Quanto
+    # maior o vocabulario, mais coincidencia — o problema PIORA com dicionario melhor.
+    #
+    # A correcao e comparar com o quanto o destino reconhece. Se o texto parece tanto ou
+    # mais do idioma de destino do que de qualquer outro, ele ja esta traduzido.
+    if melhor_n > 0 and vocabulario_do_idioma(destino, usar_geral):
+        proprio = 0
+        vocab = vocabulario_do_idioma(destino, usar_geral)
+        for w in palavras:
+            if _dic_normalizar(w) in vocab:
+                proprio += 1
+        if proprio >= melhor_n:
+            return (texto, 0, len(palavras))
+
     return (melhor_texto, melhor_n, len(palavras))
 
 
@@ -516,7 +625,7 @@ def traduzir(texto, destino, origem="auto"):
     # resto como veio. Meia frase legivel vale mais que nenhuma — foi para isso que ele
     # existe. Exige pelo menos uma palavra reconhecida, senao devolver o texto original
     # como se fosse traducao so enganaria quem esta lendo.
-    parcial, n, total = traduzir_pelo_dicionario(texto, destino)
+    parcial, n, total = traduzir_pelo_dicionario(texto, destino, usar_geral=True)
     if n > 0:
         print("  (dicionario, %d de %d palavras) %s" % (n, total, parcial))
         registrar("plano C pelo dicionario: %d de %d palavras" % (n, total))

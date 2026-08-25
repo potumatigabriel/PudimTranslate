@@ -185,6 +185,43 @@ check("o tamanho maximo da forma composta e o mesmo nos dois",
       num(PY, r"DIC_MAX_PALAVRAS = (\d+)", "grupo (py)") ==
       num(PS, r"\$script:DicMaxPalavras = (\d+)", "grupo (ps)"))
 
+# ── 4d. Vocabulario geral do WikDict ──────────────────────────────────────────
+wikdict = [
+    ("le a mesma pasta de dicionarios",
+     r'WIKDICT_PASTA = "dicionario"', r'\$script:WikdictPasta = "dicionario"'),
+    ("carrega SO a direcao pedida, sob demanda",
+     r"def carregar_wikdict\(origem, destino\)", r"function Import-PudimWikdict"),
+    ("descomprime gzip",
+     r"gzip\.open\(caminho", r"GzipStream"),
+    ("minusculo na saida quando a chave era minuscula",
+     r"v\.lower\(\) if k == k\.lower\(\) else v",
+     r"if \(\$p\.Name -ceq \$p\.Name\.ToLowerInvariant\(\)\)"),
+    ("a giria e consultada ANTES do vocabulario geral",
+     r"if chave and chave in tabela:[\s\S]{0,200}?elif tam == 1 and chave and chave in geral:",
+     r"if \(\$chave -and \$tabela\.ContainsKey\(\$chave\)\) \{[\s\S]{0,300}?\} elseif \(\$tam -eq 1"),
+    ("o vocabulario geral SO entra com a flag ligada",
+     r"carregar_wikdict\(idioma, destino\) if usar_geral else \{\}",
+     r"if \(\$UsarGeral\) \{ Import-PudimWikdict"),
+    ("e o plano C e quem liga",
+     r"traduzir_pelo_dicionario\(texto, destino, usar_geral=True\)",
+     r"Invoke-PudimDicionario -Texto \$Texto -Destino \$Destino -UsarGeral \$true"),
+    ("texto ja no idioma de destino nao e traduzido",
+     r"TEXTO QUE JA ESTA NO IDIOMA DE DESTINO",
+     r"TEXTO QUE JA ESTA NO IDIOMA DE DESTINO"),
+    ("e existe a funcao de vocabulario do idioma",
+     r"def vocabulario_do_idioma", r"function Get-PudimVocabulario"),
+    ("avisa que a carga demora",
+     r"carregando vocabulario geral", r"carregando vocabulario geral"),
+]
+for rot, rpy, rps in wikdict:
+    tpy, tps = bool(re.search(rpy, PY)), bool(re.search(rps, PS))
+    check(rot, tpy and tps, "py=%s ps=%s" % (tpy, tps))
+
+# Os dados tem licenca diferente da do mod; o aviso tem de estar no repositorio.
+import os
+_attr = os.path.join(AQUI, "dicionario", "ATTRIBUTION.md")
+check("a atribuicao do WikDict acompanha os dados", os.path.isfile(_attr))
+
 check("o limite de 500 linhas e o mesmo nos dois",
       re.search(r"LOG_MAX_LINHAS\s*=\s*(\d+)", PY).group(1) ==
       re.search(r"\$script:LogMaxLinhas\s*=\s*(\d+)", PS).group(1))

@@ -681,6 +681,102 @@ function Import-PudimDicionario
 }
 
 
+# ─── Vocabulario geral, do WikDict ────────────────────────────────────────────
+#
+# O dicionario de giria acima e escrito a mao e cobre o que nenhuma base publica cobre. O
+# problema e que ele so cobre ISSO: medido contra 32 linhas reais de chat do jogador, dava
+# 41% das palavras, e o chat de verdade e conversa, nao comando — "adamus, de onde es?",
+# "brincadeira, nao se preocupe", "e uma loucura como os bons jogadores ficaram".
+#
+# Os arquivos wikdict-*.json.gz sao vocabulario geral extraido do Wiktionary. Com eles a
+# cobertura das mesmas 32 linhas foi para 69%.
+#
+# ELES SO VALEM PARA O PLANO C, e isso e deliberado. O atalho offline existe porque em
+# giria o dicionario acerta MAIS que o Google; em vocabulario geral acontece o contrario —
+# o Google acerta mais E conjuga. Deixar o WikDict entrar no atalho roubaria do Google
+# justamente as frases que ele traduz melhor.
+#
+# LICENCA DIFERENTE DA DO MOD: CC BY-SA 3.0. Ver tools/dicionario/ATTRIBUTION.md.
+$script:WikdictPasta = "dicionario"
+$script:Wikdict = @{}
+$script:WikdictVocab = @{}
+
+
+function Import-PudimWikdict
+{
+    <#
+    .SYNOPSIS
+        Tabela do WikDict para uma direcao ("en-pt"). Carrega na primeira vez e guarda.
+    .DESCRIPTION
+        So a direcao pedida e lida: para traduzir PARA portugues bastam en-pt e es-pt, entao
+        nao ha motivo para abrir os seis arquivos e segurar 250 mil pares em memoria.
+    #>
+    param([string] $Origem, [string] $Destino)
+
+    $par = "$Origem-$Destino"
+    if ($script:Wikdict.ContainsKey($par)) { return $script:Wikdict[$par] }
+    $tabela = @{}
+    $script:Wikdict[$par] = $tabela
+    $caminho = Join-Path (Join-Path $PSScriptRoot $script:WikdictPasta) "wikdict-$par.json.gz"
+    if (-not (Test-Path -LiteralPath $caminho)) { return $tabela }
+    # Avisa porque isto demora: sao ~6s no Windows PowerShell para 48 mil entradas —
+    # ConvertFrom-Json e lento com muitas propriedades. Acontece UMA vez por sessao e so
+    # quando o plano C entra, ou seja, quando o Google e a MyMemory ja falharam. Sem o
+    # aviso a janela parece travada justo no momento em que o jogador ja esta estranhando
+    # que a traducao nao sai.
+    Write-Host "  carregando vocabulario geral ($par), um momento..."
+    try {
+        $fs = [IO.File]::OpenRead($caminho)
+        $gz = New-Object IO.Compression.GzipStream($fs, [IO.Compression.CompressionMode]::Decompress)
+        $sr = New-Object IO.StreamReader($gz, [Text.Encoding]::UTF8)
+        $bruto = $sr.ReadToEnd()
+        $sr.Close(); $gz.Close(); $fs.Close()
+        $obj = ConvertFrom-Json $bruto
+        foreach ($p in $obj.PSObject.Properties) {
+            if (-not $p.Name -or -not $p.Value) { continue }
+            $chave = Get-PudimPalavraNormalizada $p.Name
+            if (-not $chave) { continue }
+            # Minusculo na saida quando a chave era minuscula: o WikDict guarda a grafia
+            # original, entao havia palavra comum voltando gritada ("se" -> "SE") por causa
+            # de uma entrada de nome proprio.
+            $valor = [string] $p.Value
+            if ($p.Name -ceq $p.Name.ToLowerInvariant()) { $valor = $valor.ToLowerInvariant() }
+            $tabela[$chave] = $valor
+        }
+    } catch {
+        Write-PudimLog ("wikdict {0} nao carregado: {1}" -f $par, $_.Exception.Message)
+    }
+    return $tabela
+}
+
+
+function Get-PudimVocabulario
+{
+    <#
+    .SYNOPSIS
+        Palavras conhecidas de um idioma, para responder "este texto ja esta nesta lingua?".
+    .DESCRIPTION
+        As chaves de um arquivo do WikDict sao palavras do idioma de ORIGEM daquele par,
+        entao qualquer par que comece no idioma pedido serve como vocabulario dele.
+    #>
+    param([string] $Idioma, [bool] $UsarGeral)
+
+    $chave = "{0}_{1}" -f $Idioma, $(if ($UsarGeral) { "g" } else { "s" })
+    if ($script:WikdictVocab.ContainsKey($chave)) { return $script:WikdictVocab[$chave] }
+    $vocab = @{}
+    Import-PudimDicionario
+    if ($script:DicFormas -and $script:DicFormas[$Idioma]) {
+        foreach ($k in $script:DicFormas[$Idioma].Keys) { $vocab[$k] = $true }
+    }
+    if ($UsarGeral) {
+        $outro = if ($Idioma -ne "en") { "en" } else { "pt" }
+        foreach ($k in (Import-PudimWikdict -Origem $Idioma -Destino $outro).Keys) { $vocab[$k] = $true }
+    }
+    $script:WikdictVocab[$chave] = $vocab
+    return $vocab
+}
+
+
 function Invoke-PudimDicionario
 {
     <#
@@ -692,7 +788,7 @@ function Invoke-PudimDicionario
         pedido, entao testa os tres e fica com o que reconhece mais formas — numa frase de
         chat isso decide certo praticamente sempre.
     #>
-    param([string] $Texto, [string] $Destino)
+    param([string] $Texto, [string] $Destino, [bool] $UsarGeral = $false)
 
     Import-PudimDicionario
     $vazio = @{ texto = $Texto; traduzidas = 0; total = 0 }
@@ -710,6 +806,8 @@ function Invoke-PudimDicionario
     foreach ($idioma in @("en", "pt", "es")) {
         if ($idioma -eq $dest) { continue }
         $tabela = $script:DicFormas[$idioma]
+        # O WikDict so entra no plano C. No atalho a giria tem de decidir sozinha.
+        $geral = if ($UsarGeral) { Import-PudimWikdict -Origem $idioma -Destino $dest } else { @{} }
         $saida = New-Object System.Collections.ArrayList
         $traduzidas = 0
         $i = 0
@@ -720,8 +818,15 @@ function Invoke-PudimDicionario
             for ($tam = $maxTam; $tam -ge 1; $tam--) {
                 $grupo = $palavras[$i..($i + $tam - 1)]
                 $chave = (@($grupo | ForEach-Object { Get-PudimPalavraNormalizada $_ }) -join " ")
-                if (-not $chave -or -not $tabela.ContainsKey($chave)) { continue }
-                $formas = @($script:DicConceitos[$tabela[$chave]].$dest)
+                # A GIRIA VEM PRIMEIRO, sempre. "gg" existe nas duas tabelas e no WikDict sai
+                # como as duas letras; quem sabe que ali quer dizer "bom jogo" e o dicionario
+                # escrito a mao. Vocabulario geral e o fallback dele, nao o contrario.
+                if ($chave -and $tabela.ContainsKey($chave)) {
+                    $formas = @($script:DicConceitos[$tabela[$chave]].$dest)
+                } elseif ($tam -eq 1 -and $chave -and $geral.ContainsKey($chave)) {
+                    # O WikDict so tem pares de palavra unica — grupo composto nao existe la.
+                    $formas = @($geral[$chave])
+                } else { continue }
                 if ($formas.Count -eq 0 -or -not $formas[0]) { continue }
                 # Pontuacao que fechava o grupo volta colada, senao "attack!" vira "ataque"
                 # e a frase perde a enfase de quem escreveu.
@@ -747,6 +852,29 @@ function Invoke-PudimDicionario
             $melhorTexto = ($saida -join " ")
         }
     }
+    # TEXTO QUE JA ESTA NO IDIOMA DE DESTINO NAO PODE SER "TRADUZIDO".
+    #
+    # A deteccao escolhe o idioma que reconhece mais palavras, mas nunca testava o PROPRIO
+    # destino — o laco pula $idioma -eq $dest porque traduzir para a mesma lingua nao faz
+    # sentido. Com o dicionario pequeno isso passava; com 70 mil palavras do WikDict, nao:
+    #
+    #     "brincadeira nao se preocupe"  ->  "brincadeira nau SE preocupe"
+    #
+    # Portugues lido como espanhol, porque "nao"/"se" existem nas duas linguas. Quanto maior
+    # o vocabulario, mais coincidencia — o problema PIORA com dicionario melhor.
+    if ($melhorN -gt 0) {
+        $vocab = Get-PudimVocabulario -Idioma $dest -UsarGeral $UsarGeral
+        if ($vocab.Count -gt 0) {
+            $proprio = 0
+            foreach ($w in $palavras) {
+                if ($vocab.ContainsKey((Get-PudimPalavraNormalizada $w))) { $proprio++ }
+            }
+            if ($proprio -ge $melhorN) {
+                return @{ texto = $Texto; traduzidas = 0; total = $palavras.Count }
+            }
+        }
+    }
+
     return @{ texto = $melhorTexto; traduzidas = $melhorN; total = $palavras.Count }
 }
 
@@ -910,7 +1038,7 @@ function Invoke-PudimTraducao
     # resto como veio. Meia frase legivel vale mais que nenhuma — foi para isso que ele
     # existe. Exige ao menos uma palavra reconhecida, senao devolver o texto original como
     # se fosse traducao so enganaria quem esta lendo.
-    $parcial = Invoke-PudimDicionario -Texto $Texto -Destino $Destino
+    $parcial = Invoke-PudimDicionario -Texto $Texto -Destino $Destino -UsarGeral $true
     if ($parcial.traduzidas -gt 0) {
         Write-Host ("  (dicionario, {0} de {1} palavras) {2}" -f `
             $parcial.traduzidas, $parcial.total, $parcial.texto)

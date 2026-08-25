@@ -160,5 +160,70 @@ check("o plano C exige ao menos uma palavra reconhecida",
 check("o plano C diz quantas palavras saiu traduzindo",
       "%d de %d palavras" in FONTE[i_planoc:i_planoc + 400])
 
+# ── 8. Vocabulario geral do WikDict ────────────────────────────────────────────
+# O dicionario de giria cobria 41% das 32 linhas reais do jogador. Com o WikDict foi para
+# 64%. O resto sao nomes proprios (pudim, anolddude, ozempic) e erros de digitacao
+# (ambus, tarrain), que dicionario nenhum vai cobrir.
+print("")
+print("vocabulario geral (WikDict)")
+
+en_pt = tr.carregar_wikdict("en", "pt")
+check("carrega a direcao pedida", len(en_pt) > 40000, len(en_pt))
+check("segunda chamada nao recarrega", tr.carregar_wikdict("en", "pt") is en_pt)
+check("direcao inexistente falha em silencio", tr.carregar_wikdict("zz", "yy") == {})
+
+FONTE2 = io.open(os.path.join(AQUI, "pudim_tradutor.py"), encoding="utf-8").read()
+# ELE SO VALE NO PLANO C. Esta e a assercao que protege a decisao: em vocabulario geral o
+# Google acerta mais E conjuga, entao deixar o WikDict entrar no atalho roubaria dele
+# justamente as frases que ele traduz melhor.
+check("o plano C liga o vocabulario geral",
+      "traduzir_pelo_dicionario(texto, destino, usar_geral=True)" in FONTE2)
+check("e o atalho offline NAO liga",
+      "traduzido, n, total = traduzir_pelo_dicionario(texto, destino)" in FONTE2)
+check("so a direcao pedida e carregada, nao as seis",
+      "carregar_wikdict(idioma, destino) if usar_geral" in FONTE2)
+
+# A GIRIA GANHA DO VOCABULARIO GERAL. "gg" existe nos dois e no WikDict sairia como as duas
+# letras; quem sabe que ali quer dizer "bom jogo" e o dicionario escrito a mao.
+check("giria ganha do vocabulario geral",
+      tr.traduzir_pelo_dicionario("gg", "pt", usar_geral=True)[0] == "bom jogo",
+      tr.traduzir_pelo_dicionario("gg", "pt", usar_geral=True)[0])
+check("e o vocabulario geral cobre o que a giria nao cobria",
+      tr.traduzir_pelo_dicionario("worry", "pt", usar_geral=True)[1] == 1 and
+      tr.traduzir_pelo_dicionario("worry", "pt")[1] == 0)
+
+# ── 9. A armadilha que so aparece com dicionario grande ────────────────────────
+# A deteccao escolhe o idioma que reconhece mais palavras, e nunca testava o PROPRIO
+# destino. Com 279 conceitos isso passava; com 70 mil palavras, nao:
+#     "brincadeira nao se preocupe"  ->  "brincadeira nau SE preocupe"
+# Portugues lido como espanhol, porque "nao" e "se" existem nas duas linguas. Quanto maior
+# o vocabulario, MAIS coincidencia — o problema piora com dicionario melhor.
+ja_pt = "brincadeira nao se preocupe"
+check("texto ja no idioma de destino nao e mexido",
+      tr.traduzir_pelo_dicionario(ja_pt, "pt", usar_geral=True) == (ja_pt, 0, 4),
+      tr.traduzir_pelo_dicionario(ja_pt, "pt", usar_geral=True))
+check("mas texto de OUTRA lingua continua sendo traduzido",
+      tr.traduzir_pelo_dicionario("necesito madera por favor", "pt", usar_geral=True)[1] == 4)
+check("e o sentido inverso tambem",
+      tr.traduzir_pelo_dicionario("eu preciso de madeira", "en", usar_geral=True)[1] > 0)
+check("a guarda existe no codigo, com o porque escrito",
+      "TEXTO QUE JA ESTA NO IDIOMA DE DESTINO" in FONTE2 and
+      "def vocabulario_do_idioma" in FONTE2)
+
+# Capitalizacao: o WikDict guarda a grafia original, entao palavra comum voltava gritada
+# ("se" -> "SE") por causa de uma entrada de nome proprio.
+gritadas = [v for k, v in list(en_pt.items())[:20000] if v.isupper() and len(v) > 1]
+check("palavra comum nao volta em maiuscula", not gritadas, gritadas[:5])
+
+# ── 10. A licenca ──────────────────────────────────────────────────────────────
+# Os dados sao CC BY-SA 3.0 e o mod e GPL-3.0. A fronteira precisa estar escrita, senao
+# quem clonar o repositorio nao tem como saber.
+attr = os.path.join(AQUI, "dicionario", "ATTRIBUTION.md")
+check("o arquivo de atribuicao existe", os.path.isfile(attr))
+texto_attr = io.open(attr, encoding="utf-8").read() if os.path.isfile(attr) else ""
+for exigencia in ("CC BY-SA", "Wiktionary", "DBnary", "WikDict", "modificad"):
+    check('a atribuicao cita "%s"' % exigencia, exigencia in texto_attr)
+check("e diz que a licenca difere da do mod", "GPL-3.0" in texto_attr)
+
 print("\nTODOS OS TESTES PASSARAM" if falhas == 0 else "\n%d TESTE(S) FALHARAM" % falhas)
 sys.exit(0 if falhas == 0 else 1)
