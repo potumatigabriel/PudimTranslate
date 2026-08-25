@@ -57,6 +57,7 @@ import os
 import re
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 
@@ -88,6 +89,20 @@ TAMANHO_RESPOSTA = 65536
 GTX_URL = "https://translate.googleapis.com/translate_a/single"
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 HTTP_TIMEOUT = 8
+
+# O endpoint gtx e gratuito e nao documentado: ele limita por IP e responde
+# "HTTP Error 429: Too Many Requests" quando acha que foi pedido demais. Sem
+# tratar isso, o laco reencontrava a mesma frase pendente a cada POLL_SECONDS e
+# tentava de novo — tres chamadas por segundo, o que MANTEM o bloqueio de pe em
+# vez de esperar ele passar. Foi o que travou o tradutor em 19/08: ele estava
+# rodando e achando os pedidos, e toda traducao falhava com 429.
+#
+# Duas travas, que se complementam:
+#   • intervalo minimo entre chamadas, para nao criar rajada;
+#   • recuo que dobra a cada 429, para dar tempo do bloqueio expirar.
+INTERVALO_MIN_CHAMADA = 0.35
+RECUO_INICIAL = 5.0
+RECUO_MAXIMO = 300.0
 
 
 # ─── Localizacao da pasta de dados do 0 A.D. ──────────────────────────────────
@@ -170,6 +185,16 @@ def achar_userdata(preferido=None):
 
 # ─── Tradução ─────────────────────────────────────────────────────────────────
 
+# Estado do controle de ritmo. Vive no modulo porque traduzir() e chamada de um
+# lugar so e guardar isso no chamador espalharia a regra por duas funcoes.
+_ritmo = {"ultima_chamada": 0.0, "bloqueado_ate": 0.0, "recuo": RECUO_INICIAL}
+
+
+def em_pausa():
+    """Segundos que ainda faltam do recuo por 429; 0 quando pode chamar."""
+    return max(0.0, _ritmo["bloqueado_ate"] - time.time())
+
+
 def traduzir(texto, destino, origem="auto"):
     """
     Devolve o texto traduzido, ou None se a chamada falhar.
@@ -177,7 +202,17 @@ def traduzir(texto, destino, origem="auto"):
     A resposta do endpoint gtx e um array aninhado; o primeiro elemento e uma
     lista de pedacos e o texto traduzido de cada pedaco e o indice 0. Juntar os
     pedacos importa: frases longas voltam quebradas em varios deles.
+
+    Respeita o recuo por 429 e o intervalo minimo entre chamadas — ver
+    INTERVALO_MIN_CHAMADA.
     """
+    if em_pausa():
+        return None
+
+    espera = INTERVALO_MIN_CHAMADA - (time.time() - _ritmo["ultima_chamada"])
+    if espera > 0:
+        time.sleep(espera)
+    _ritmo["ultima_chamada"] = time.time()
     parametros = urllib.parse.urlencode({
         "client": "gtx",
         "sl": origem,
@@ -193,9 +228,21 @@ def traduzir(texto, destino, origem="auto"):
     try:
         with urllib.request.urlopen(requisicao, timeout=HTTP_TIMEOUT) as resposta:
             dados = json.loads(resposta.read().decode("utf-8", "replace"))
+    except urllib.error.HTTPError as erro:
+        if erro.code == 429:
+            _ritmo["bloqueado_ate"] = time.time() + _ritmo["recuo"]
+            print(f"  ! Google limitou o ritmo (429). Pausando {int(_ritmo['recuo'])}s.")
+            # Dobra ate o teto: se o bloqueio for longo, insistir so o prolonga.
+            _ritmo["recuo"] = min(RECUO_MAXIMO, _ritmo["recuo"] * 2)
+        else:
+            print(f"  ! falha ao traduzir: {erro}")
+        return None
     except Exception as erro:
         print(f"  ! falha ao traduzir: {erro}")
         return None
+
+    # Deu certo: o bloqueio passou, entao o proximo 429 volta a recuar do inicio.
+    _ritmo["recuo"] = RECUO_INICIAL
 
     try:
         pedacos = dados[0]
@@ -452,6 +499,16 @@ def main():
             # lingua o 0 A.D. esta rodando e ele, nao este programa. O --to so
             # vale quando o pedido nao diz nada (mod antigo, ou teste manual).
             destino = normalizar_idioma(pedido.get("to")) or argumentos.to
+
+            # Em pausa por 429 nao ha o que fazer com os pedidos: sair daqui evita
+            # imprimir a mesma frase dezenas de vezes e deixa o sinal de vida em dia.
+            if em_pausa():
+                if time.time() - ultimo_sinal >= 5:
+                    gravar_resposta(caminho_res, respostas, int(time.time()))
+                    ultimo_sinal = time.time()
+                    print(f"  . aguardando o limite do Google passar ({int(em_pausa())}s)")
+                time.sleep(POLL_SECONDS)
+                continue
 
             novidade = False
             for item in pedido["items"]:
