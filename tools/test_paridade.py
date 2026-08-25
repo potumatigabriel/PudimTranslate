@@ -149,6 +149,42 @@ for rot, rpy, rps in extras:
     tpy, tps = bool(re.search(rpy, PY)), bool(re.search(rps, PS))
     check(rot, tpy and tps, "py=%s ps=%s" % (tpy, tps))
 
+# ── 4c. Dicionario de bolso: idem, tem de existir nos dois ────────────────────
+# Ele nao e enfeite: e o unico caminho que funciona com a rede fora, e e o que acerta as
+# girias. Se ele existir so num lado, metade dos jogadores fica sem.
+dicionario = [
+    ("le o mesmo arquivo de dicionario",
+     r'DICIONARIO_ARQUIVO = "pudimtr_dicionario\.json"',
+     r'\$script:ArqDicionario = "pudimtr_dicionario\.json"'),
+    ("busca gulosa do maior grupo para o menor",
+     r"for tam in range\(min\(DIC_MAX_PALAVRAS", r"for \(\$tam = \$maxTam; \$tam -ge 1; \$tam--\)"),
+    ("normaliza tirando acento e pontuacao",
+     r"def _dic_normalizar", r"function Get-PudimPalavraNormalizada"),
+    ("descobre a origem testando os tres idiomas",
+     r'for idioma in \("en", "pt", "es"\):[\s\S]{0,200}?if idioma == destino',
+     r'foreach \(\$idioma in @\("en", "pt", "es"\)\) \{[\s\S]{0,200}?if \(\$idioma -eq \$dest\)'),
+    ("devolve a pontuacao final colada na palavra traduzida",
+     r"cauda = ultimo\[-1\] \+ cauda", r"\$cauda = \$ultimo\[-1\] \+ \$cauda"),
+    ("o atalho offline vem ANTES das portas do Google",
+     r"pronto = traduzir_offline_completo\(texto, destino\)[\s\S]{0,200}?for cliente in GTX_CLIENTES",
+     r"\$pronto = Invoke-PudimDicionarioCompleto[\s\S]{0,260}?foreach \(\$cliente in \$script:GtxClientes\)"),
+    ("e o dicionario parcial e o ultimo recurso, depois do plano B",
+     r"alternativa = traduzir_plano_b[\s\S]{0,900}?parcial, n, total = traduzir_pelo_dicionario",
+     r"Invoke-PudimPlanoB[\s\S]{0,600}?\$parcial = Invoke-PudimDicionario "),
+    ("o plano C exige ao menos uma palavra reconhecida",
+     r"if n > 0:", r"if \(\$parcial\.traduzidas -gt 0\)"),
+]
+for rot, rpy, rps in dicionario:
+    tpy, tps = bool(re.search(rpy, PY)), bool(re.search(rps, PS))
+    check(rot, tpy and tps, "py=%s ps=%s" % (tpy, tps))
+
+check("o limite do atalho e o mesmo nos dois",
+      num(PY, r"DIC_MAX_ATALHO = (\d+)", "atalho (py)") ==
+      num(PS, r"\$script:DicMaxAtalho = (\d+)", "atalho (ps)"))
+check("o tamanho maximo da forma composta e o mesmo nos dois",
+      num(PY, r"DIC_MAX_PALAVRAS = (\d+)", "grupo (py)") ==
+      num(PS, r"\$script:DicMaxPalavras = (\d+)", "grupo (ps)"))
+
 check("o limite de 500 linhas e o mesmo nos dois",
       re.search(r"LOG_MAX_LINHAS\s*=\s*(\d+)", PY).group(1) ==
       re.search(r"\$script:LogMaxLinhas\s*=\s*(\d+)", PS).group(1))
@@ -156,7 +192,7 @@ check("o limite de 500 linhas e o mesmo nos dois",
 # ── 5. Os dois falam a mesma coisa na tela ─────────────────────────────────────
 # O jogador le a janela do tradutor; a mensagem nao pode depender de qual
 # implementacao a maquina escolheu.
-for frase in ("limitada (429)", "tentando a proxima", "(plano B)"):
+for frase in ("limitada (429)", "tentando a proxima", "(plano B)", "(dicionario)"):
     npy = PY.count(frase)
     nps = PS.count(frase) + PS_LOOP.count(frase)
     check('a frase "%s" existe nos dois' % frase[:34], npy >= 1 and nps >= 1,

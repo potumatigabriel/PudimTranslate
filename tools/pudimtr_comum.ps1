@@ -589,6 +589,185 @@ function Write-PudimLog
 }
 
 
+# ─── Dicionario de bolso ──────────────────────────────────────────────────────
+#
+# Ideia do jogador, em 25/08: "talvez o plano B seja ter um pequeno dicionario de
+# palavras de ingles, portugues e espanhol... com as palavras mais usadas em jogos
+# online, usando as girias e abreviacoes mais comuns... e o cache que salva, seja de
+# palavras e nao de frases, pq ai traduz o que conseguir".
+#
+# Duas coisas boas de uma vez.
+#
+# A primeira: ele NUNCA falha. Nao depende de rede, de cota, de 429 nem de nenhum
+# servico continuar existindo. Quando todas as portas do Google estao em recuo e a
+# MyMemory tambem nao responde, e ele que evita o tradutor ficar mudo.
+#
+# A segunda, menos obvia: em GIRIA DE JOGO ele acerta MAIS que o Google. "gg" nao e
+# duas letras, e "bom jogo". "afk", "rax", "pop", "eco", "ez", "brb" — o Google devolve
+# lixo nesses e o dicionario devolve o que a pessoa quis dizer. Por isso ele e
+# consultado ANTES das APIs quando cobre uma frase curta inteira.
+#
+# TODA correcao de comportamento aqui tem de entrar tambem em pudim_tradutor.py.
+# tools/test_paridade.py existe para o esquecimento aparecer.
+$script:ArqDicionario = "pudimtr_dicionario.json"
+$script:DicMaxPalavras = 3
+# Ate quantas palavras o atalho offline pode resolver sozinho.
+#
+# Este numero e o freio contra o proprio dicionario. Ele nao conjuga, nao concorda genero
+# e nao reordena, entao numa frase com gramatica de verdade perde feio para o Google:
+#
+#   "help me they are attacking my base"  ->  "ajuda eles e ataque meu base"
+#
+# Sao 7 palavras e TODAS estao no dicionario (as de ligacao tambem), o que daria 100% de
+# cobertura e roubaria a frase do Google. Ate 4 palavras o chat de jogo e quase todo giria
+# e comando seco, onde a troca direta acerta. Acima disso, gramatica pesa mais que giria.
+$script:DicMaxAtalho = 4
+
+$script:DicConceitos = $null
+$script:DicFormas = $null
+$script:DicCarregado = $false
+
+
+function Get-PudimPalavraNormalizada
+{
+    <#
+    .SYNOPSIS
+        Minuscula, sem acento e sem pontuacao — o arquivo do dicionario e escrito assim.
+    #>
+    param([string] $Palavra)
+    $t = $Palavra.ToLowerInvariant().Normalize([Text.NormalizationForm]::FormD)
+    $sb = New-Object System.Text.StringBuilder
+    foreach ($c in $t.ToCharArray()) {
+        if ([Globalization.CharUnicodeInfo]::GetUnicodeCategory($c) -eq
+            [Globalization.UnicodeCategory]::NonSpacingMark) { continue }
+        if ([char]::IsLetterOrDigit($c)) { [void] $sb.Append($c) }
+    }
+    return $sb.ToString()
+}
+
+
+function Import-PudimDicionario
+{
+    <#
+    .SYNOPSIS
+        Le pudimtr_dicionario.json e monta as tabelas de busca. Falha em silencio: sem
+        dicionario o tradutor continua funcionando pelas APIs.
+    #>
+    if ($script:DicCarregado) { return }
+    $script:DicCarregado = $true
+    $caminho = Join-Path $PSScriptRoot $script:ArqDicionario
+    try {
+        $dados = Get-Content -LiteralPath $caminho -Raw -Encoding UTF8 | ConvertFrom-Json
+    } catch {
+        Write-PudimLog ("dicionario nao carregado: {0}" -f $_.Exception.Message)
+        return
+    }
+    $script:DicConceitos = @($dados.conceitos)
+    $script:DicFormas = @{}
+    foreach ($idioma in @("en", "pt", "es")) {
+        $tabela = @{}
+        for ($i = 0; $i -lt $script:DicConceitos.Count; $i++) {
+            foreach ($forma in @($script:DicConceitos[$i].$idioma)) {
+                if (-not $forma) { continue }
+                $partes = @($forma -split '\s+' | ForEach-Object { Get-PudimPalavraNormalizada $_ })
+                $chave = ($partes -join " ")
+                # Primeiro conceito a reivindicar a forma fica com ela. A ordem do arquivo
+                # e deliberada: o sentido de jogo vem antes do sentido geral.
+                if ($chave -and -not $tabela.ContainsKey($chave)) { $tabela[$chave] = $i }
+            }
+        }
+        $script:DicFormas[$idioma] = $tabela
+    }
+}
+
+
+function Invoke-PudimDicionario
+{
+    <#
+    .SYNOPSIS
+        Traduz palavra por palavra. Devolve @{ texto; traduzidas; total }.
+    .DESCRIPTION
+        Nao tenta ser um tradutor: nao conjuga, nao concorda genero, nao reordena. Troca
+        palavra por palavra e preserva o que nao conhece. O idioma de origem nao vem no
+        pedido, entao testa os tres e fica com o que reconhece mais formas — numa frase de
+        chat isso decide certo praticamente sempre.
+    #>
+    param([string] $Texto, [string] $Destino)
+
+    Import-PudimDicionario
+    $vazio = @{ texto = $Texto; traduzidas = 0; total = 0 }
+    if (-not $script:DicConceitos -or $script:DicConceitos.Count -eq 0) { return $vazio }
+    $dest = $Destino
+    if (-not $dest) { $dest = "pt" }
+    $dest = $dest.Substring(0, [Math]::Min(2, $dest.Length)).ToLowerInvariant()
+    if (@("en", "pt", "es") -notcontains $dest) { return $vazio }
+
+    $palavras = @($Texto -split '\s+' | Where-Object { $_ -ne "" })
+    if ($palavras.Count -eq 0) { return $vazio }
+
+    $melhorTexto = $Texto
+    $melhorN = 0
+    foreach ($idioma in @("en", "pt", "es")) {
+        if ($idioma -eq $dest) { continue }
+        $tabela = $script:DicFormas[$idioma]
+        $saida = New-Object System.Collections.ArrayList
+        $traduzidas = 0
+        $i = 0
+        while ($i -lt $palavras.Count) {
+            $achou = $false
+            # Guloso do maior para o menor: "good game" tem de ganhar de "good".
+            $maxTam = [Math]::Min($script:DicMaxPalavras, $palavras.Count - $i)
+            for ($tam = $maxTam; $tam -ge 1; $tam--) {
+                $grupo = $palavras[$i..($i + $tam - 1)]
+                $chave = (@($grupo | ForEach-Object { Get-PudimPalavraNormalizada $_ }) -join " ")
+                if (-not $chave -or -not $tabela.ContainsKey($chave)) { continue }
+                $formas = @($script:DicConceitos[$tabela[$chave]].$dest)
+                if ($formas.Count -eq 0 -or -not $formas[0]) { continue }
+                # Pontuacao que fechava o grupo volta colada, senao "attack!" vira "ataque"
+                # e a frase perde a enfase de quem escreveu.
+                $cauda = ""
+                $ultimo = $grupo[-1]
+                while ($ultimo.Length -gt 0 -and -not [char]::IsLetterOrDigit($ultimo[-1])) {
+                    $cauda = $ultimo[-1] + $cauda
+                    $ultimo = $ultimo.Substring(0, $ultimo.Length - 1)
+                }
+                [void] $saida.Add($formas[0] + $cauda)
+                $traduzidas += $tam
+                $i += $tam
+                $achou = $true
+                break
+            }
+            if (-not $achou) {
+                [void] $saida.Add($palavras[$i])
+                $i++
+            }
+        }
+        if ($traduzidas -gt $melhorN) {
+            $melhorN = $traduzidas
+            $melhorTexto = ($saida -join " ")
+        }
+    }
+    return @{ texto = $melhorTexto; traduzidas = $melhorN; total = $palavras.Count }
+}
+
+
+function Invoke-PudimDicionarioCompleto
+{
+    <#
+    .SYNOPSIS
+        So devolve algo quando o dicionario cobre a frase CURTA inteira; $null caso contrario.
+    #>
+    param([string] $Texto, [string] $Destino)
+    $palavras = @($Texto -split '\s+' | Where-Object { $_ -ne "" })
+    if ($palavras.Count -gt $script:DicMaxAtalho) { return $null }
+    $r = Invoke-PudimDicionario -Texto $Texto -Destino $Destino
+    if ($r.total -gt 0 -and $r.traduzidas -eq $r.total -and $r.texto -ne $Texto) {
+        return $r.texto
+    }
+    return $null
+}
+
+
 function Invoke-PudimPlanoB
 {
     <#
@@ -663,6 +842,14 @@ function Invoke-PudimTraducao
     #>
     param([string] $Texto, [string] $Destino, [string] $Origem = "auto")
 
+    # Atalho: frase curta inteiramente conhecida sai do dicionario, sem rede e sem cota. Em
+    # giria de jogo ele e MAIS certeiro que o Google, que traduz "gg" ao pe da letra.
+    $pronto = Invoke-PudimDicionarioCompleto -Texto $Texto -Destino $Destino
+    if ($pronto) {
+        Write-Host "  (dicionario) $pronto"
+        return $pronto
+    }
+
     foreach ($cliente in $script:GtxClientes) {
         if ($script:BloqueadoAte[$cliente] -gt (Get-Date)) { continue }
 
@@ -714,7 +901,23 @@ function Invoke-PudimTraducao
 
     # Todas as portas do Google em recuo: o plano B assume.
     $alternativa = Invoke-PudimPlanoB -Texto $Texto -Destino $Destino -Origem $Origem
-    if ($alternativa) { Write-Host "  (plano B) $alternativa" }
-    return $alternativa
+    if ($alternativa) {
+        Write-Host "  (plano B) $alternativa"
+        return $alternativa
+    }
+
+    # Plano C: nem o Google nem a MyMemory. O dicionario traduz o que conhece e deixa o
+    # resto como veio. Meia frase legivel vale mais que nenhuma — foi para isso que ele
+    # existe. Exige ao menos uma palavra reconhecida, senao devolver o texto original como
+    # se fosse traducao so enganaria quem esta lendo.
+    $parcial = Invoke-PudimDicionario -Texto $Texto -Destino $Destino
+    if ($parcial.traduzidas -gt 0) {
+        Write-Host ("  (dicionario, {0} de {1} palavras) {2}" -f `
+            $parcial.traduzidas, $parcial.total, $parcial.texto)
+        Write-PudimLog ("plano C pelo dicionario: {0} de {1} palavras" -f `
+            $parcial.traduzidas, $parcial.total)
+        return $parcial.texto
+    }
+    return $null
 }
 

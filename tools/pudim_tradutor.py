@@ -68,6 +68,7 @@ Deixe rodando numa janela enquanto joga. Sem ele o mod continua funcionando;
 so nao traduz (o botao avisa que o tradutor esta desligado).
 """
 
+import io
 import argparse
 import json
 import os
@@ -232,6 +233,158 @@ def achar_userdata(preferido=None):
     )
 
 
+
+# ─── Dicionario de bolso ──────────────────────────────────────────────────────
+#
+# Ideia do jogador, em 25/08: "talvez o plano B seja ter um pequeno dicionario de
+# palavras de ingles, portugues e espanhol... com as palavras mais usadas em jogos
+# online, usando as girias e abreviacoes mais comuns... e o cache que salva, seja de
+# palavras e nao de frases, pq ai traduz o que conseguir".
+#
+# Duas coisas boas de uma vez.
+#
+# A primeira: ele NUNCA falha. Nao depende de rede, de cota, de 429 nem de nenhum
+# servico continuar existindo. Quando todas as portas do Google estao em recuo e a
+# MyMemory tambem nao responde, e ele que evita o tradutor ficar mudo. Traduz o que
+# conhece e deixa o resto como veio — meia frase legivel vale mais que nenhuma.
+#
+# A segunda, menos obvia: em GIRIA DE JOGO ele acerta MAIS que o Google. "gg" nao e
+# duas letras, e "bom jogo". "afk" nao se traduz ao pe da letra. "rax", "pop", "eco",
+# "ez", "brb" — o Google devolve lixo nesses, e o dicionario devolve o que a pessoa
+# quis dizer. Por isso ele e consultado ANTES das APIs quando cobre a frase inteira:
+# alem de acertar mais, sai instantaneo e nao gasta cota nenhuma.
+DICIONARIO_ARQUIVO = "pudimtr_dicionario.json"
+DIC_MAX_PALAVRAS = 3   # maior forma composta buscada ("good game" = 2, "how many" = 2)
+# Ate quantas palavras o atalho offline pode resolver sozinho.
+#
+# Este numero e o freio contra o proprio dicionario. Ele nao conjuga, nao concorda genero e
+# nao reordena, entao numa frase com gramatica de verdade ele perde feio para o Google:
+#
+#   "help me they are attacking my base"  ->  "ajuda eles e ataque meu base"
+#
+# Sao 7 palavras e TODAS estao no dicionario (as de ligacao — my, are, they — estao la), o
+# que daria 100% de cobertura e roubaria a frase do Google. Em 4 palavras ou menos o chat de
+# jogo e quase todo giria e comando seco ("gg wp", "ty gl hf", "attack blue now"), onde a
+# troca direta acerta e o Google erra. Acima disso, gramatica pesa mais que giria.
+DIC_MAX_ATALHO = 4
+
+# {idioma: {forma_normalizada: indice_do_conceito}} e a lista de conceitos.
+_dic = {"conceitos": [], "formas": {}, "carregado": False}
+
+
+def _dic_normalizar(palavra):
+    """Minuscula, sem acento e sem pontuacao — o arquivo e escrito assim."""
+    import unicodedata
+    p = unicodedata.normalize("NFD", palavra.lower())
+    p = "".join(c for c in p if unicodedata.category(c) != "Mn")
+    return "".join(c for c in p if c.isalnum())
+
+
+def carregar_dicionario(pasta_do_script=None):
+    """Le pudimtr_dicionario.json e monta as tabelas de busca. Falha em silencio."""
+    if _dic["carregado"]:
+        return _dic
+    _dic["carregado"] = True
+    base = pasta_do_script or os.path.dirname(os.path.abspath(__file__))
+    caminho = os.path.join(base, DICIONARIO_ARQUIVO)
+    try:
+        with io.open(caminho, encoding="utf-8") as f:
+            dados = json.load(f)
+    except Exception as erro:
+        registrar("dicionario nao carregado: %s" % str(erro)[:120])
+        return _dic
+    conceitos = dados.get("conceitos", [])
+    _dic["conceitos"] = conceitos
+    for idioma in ("en", "pt", "es"):
+        tabela = {}
+        for i, c in enumerate(conceitos):
+            for forma in c.get(idioma, []):
+                chave = " ".join(_dic_normalizar(w) for w in forma.split())
+                # Primeiro conceito a reivindicar a forma fica com ela. A ordem do
+                # arquivo e deliberada: o sentido de jogo vem antes do sentido geral.
+                if chave and chave not in tabela:
+                    tabela[chave] = i
+        _dic["formas"][idioma] = tabela
+    return _dic
+
+
+def traduzir_pelo_dicionario(texto, destino):
+    """
+    Devolve (texto_traduzido, palavras_traduzidas, palavras_no_total).
+
+    Nao tenta ser um tradutor: nao conjuga, nao concorda genero, nao reordena. Troca
+    palavra por palavra e preserva o que nao conhece. O idioma de origem nao vem no
+    pedido, entao ele testa os tres e fica com o que reconhece mais formas — numa
+    frase de chat isso decide certo praticamente sempre.
+    """
+    d = carregar_dicionario()
+    if not d["conceitos"]:
+        return (texto, 0, 0)
+    destino = (destino or "pt")[:2].lower()
+    if destino not in ("en", "pt", "es"):
+        return (texto, 0, 0)
+
+    palavras = texto.split()
+    if not palavras:
+        return (texto, 0, 0)
+
+    def tentar(idioma):
+        tabela = d["formas"].get(idioma, {})
+        saida, traduzidas, i = [], 0, 0
+        while i < len(palavras):
+            achou = False
+            # Guloso do maior para o menor: "good game" tem de ganhar de "good".
+            for tam in range(min(DIC_MAX_PALAVRAS, len(palavras) - i), 0, -1):
+                grupo = palavras[i:i + tam]
+                chave = " ".join(_dic_normalizar(w) for w in grupo)
+                if not chave or chave not in tabela:
+                    continue
+                formas = d["conceitos"][tabela[chave]].get(destino, [])
+                if not formas:
+                    continue
+                # Pontuacao que fechava o grupo volta colada, senao "attack!" vira
+                # "ataque" e a frase perde a enfase de quem escreveu.
+                cauda = ""
+                ultimo = grupo[-1]
+                while ultimo and not ultimo[-1].isalnum():
+                    cauda = ultimo[-1] + cauda
+                    ultimo = ultimo[:-1]
+                saida.append(formas[0] + cauda)
+                traduzidas += tam
+                i += tam
+                achou = True
+                break
+            if not achou:
+                saida.append(palavras[i])
+                i += 1
+        return (" ".join(saida), traduzidas)
+
+    melhor_texto, melhor_n, melhor_idioma = texto, 0, None
+    for idioma in ("en", "pt", "es"):
+        if idioma == destino:
+            continue   # traduzir para o proprio idioma nao faz sentido
+        t, n = tentar(idioma)
+        if n > melhor_n:
+            melhor_texto, melhor_n, melhor_idioma = t, n, idioma
+    return (melhor_texto, melhor_n, len(palavras))
+
+
+def traduzir_offline_completo(texto, destino):
+    """
+    So devolve algo quando o dicionario cobre a frase INTEIRA.
+
+    E o caminho rapido: 'gg wp' ou 'attack blue now' saem na hora, sem rede, e com a
+    giria certa. Cobertura parcial nao entra aqui — para meia frase, so depois que as
+    APIs falharem.
+    """
+    if len(texto.split()) > DIC_MAX_ATALHO:
+        return None
+    traduzido, n, total = traduzir_pelo_dicionario(texto, destino)
+    if total > 0 and n == total and traduzido != texto:
+        return traduzido
+    return None
+
+
 # ─── Tradução ─────────────────────────────────────────────────────────────────
 
 # Estado do controle de ritmo. Vive no modulo porque traduzir() e chamada de um
@@ -294,6 +447,13 @@ def traduzir(texto, destino, origem="auto"):
     pedacos importa: frases longas voltam quebradas em varios deles. As tres
     portas usam o mesmo formato.
     """
+    # Atalho: frase inteiramente conhecida sai do dicionario, sem rede e sem cota. Em
+    # giria de jogo ele e MAIS certeiro que o Google, que traduz "gg" ao pe da letra.
+    pronto = traduzir_offline_completo(texto, destino)
+    if pronto is not None:
+        print("  (dicionario) %s" % pronto)
+        return pronto
+
     for cliente in GTX_CLIENTES:
         if _ritmo["bloqueado_ate"][cliente] > time.time():
             continue
@@ -350,7 +510,18 @@ def traduzir(texto, destino, origem="auto"):
     alternativa = traduzir_plano_b(texto, destino, origem)
     if alternativa:
         print("  (plano B) %s" % alternativa)
-    return alternativa
+        return alternativa
+
+    # Plano C: nem o Google nem a MyMemory. O dicionario traduz o que conhece e deixa o
+    # resto como veio. Meia frase legivel vale mais que nenhuma — foi para isso que ele
+    # existe. Exige pelo menos uma palavra reconhecida, senao devolver o texto original
+    # como se fosse traducao so enganaria quem esta lendo.
+    parcial, n, total = traduzir_pelo_dicionario(texto, destino)
+    if n > 0:
+        print("  (dicionario, %d de %d palavras) %s" % (n, total, parcial))
+        registrar("plano C pelo dicionario: %d de %d palavras" % (n, total))
+        return parcial
+    return None
 
 
 # ─── Limpeza do texto vindo do jogo ───────────────────────────────────────────

@@ -250,6 +250,54 @@ The response file is always exactly 64 KB, padded with spaces. The game's VFS re
 size from when it indexed the folder, so a file that grows gets read truncated — a JSON cut in half.
 A fixed size keeps that remembered value correct forever.
 
+## Where a translation comes from
+
+Four sources, tried in this order. The order is not arbitrary — each one is there because the
+one before it fails in a specific way.
+
+**1. The built-in dictionary, for short phrases it covers completely.** No network, no quota,
+instant. It goes *first* because in game slang it is more accurate than any general translator:
+`gg` is "good game", not two letters; `afk`, `rax`, `eco`, `pop`, `brb` all mean something that a
+literal translation destroys. It is capped at four words, because the dictionary swaps words and
+does not conjugate, agree gender or reorder — past that length, grammar matters more than slang and
+a real translator wins.
+
+**2. Google Translate, rotating between three endpoints.** The free endpoint rate-limits by the
+`client` parameter, not by your IP or your account. Measured on one machine within one minute:
+`client=gtx` answered 429 to everything while `client=at` translated 8 phrases out of 8. So the
+first reaction to a block is to switch endpoint, not to give up on Google. The backoff is
+per-endpoint: a 429 on one does not silence the others. All three return the same response format.
+
+**3. MyMemory**, filtered to machine translations only (`created-by == "MT!"`). Without that filter
+it returns entries from its translation memory, which are often unrelated sentences someone once
+submitted.
+
+**4. The dictionary again, partially.** Whatever it knows gets translated, the rest is left as it
+came, and the count is shown: `(dicionario, 5 de 7 palavras)`. Half a readable line beats silence.
+
+The dictionary lives in `tools/pudimtr_dicionario.json` — 279 concepts covering greetings, combat,
+units, buildings, resources, map directions, colours, lobby vocabulary and chat slang, in English,
+Portuguese and Spanish. The source language is not in the request, so it tries all three and keeps
+whichever recognises more words. Adding an entry is editing one JSON file; both implementations
+read the same one.
+
+**Microsoft Translator and Amazon Translate are not options.** Microsoft needs an Azure key — the
+keyless endpoint that Edge used (`edge.microsoft.com/translate/auth`) now returns 404. Amazon
+requires AWS SigV4 credentials; there is no anonymous path. LibreTranslate's public instances and
+Lingva were both tested and both failed.
+
+## Two implementations, one behaviour
+
+There is a Python translator and a PowerShell one. `PudimTradutor.bat` prefers PowerShell, because
+it ships with Windows and nothing needs installing; it falls back to Python if PowerShell is
+missing. On Linux and macOS the order is reversed.
+
+**Every behaviour fix has to go into both.** This is not a style preference — it cost half an hour
+of diagnosis once: the 429 handling was written only in `pudim_tradutor.py`, the player was running
+the PowerShell one, and the evidence was subtle because .NET reports the error in the Windows
+display language. `tools/test_paridade.py` exists so that the omission shows up as a failing test
+instead of as a bug in a match.
+
 ## How it works, per screen
 
 **In a match** no button had to be invented. The game's own `ChatOverlay` already treats each chat
@@ -263,12 +311,13 @@ message to translate it.
 
 ## Privacy
 
-The chat messages you choose to translate are sent to Google Translate. Nothing else leaves your
-machine, and nothing is sent until you click a message — unless you turn on `pudimtranslate.auto`,
-in which case every chat message that arrives during a match is sent as it arrives.
+The chat messages you choose to translate are sent to Google Translate, or to MyMemory when Google
+is rate-limited. Nothing else leaves your machine, and nothing is sent until you click a message —
+unless you turn on `pudimtranslate.auto`, in which case every chat message that arrives during a
+match is sent as it arrives.
 
-System notices are never sent at all, and a phrase already in the on-disk cache is answered locally,
-without touching the network.
+System notices are never sent at all. A phrase already in the on-disk cache is answered locally, and
+so is any short phrase the built-in dictionary covers — those never touch the network at all.
 
 ## Language
 

@@ -1,0 +1,3601 @@
+{
+ "versao": 1,
+ "sobre": "Vocabulario de chat de jogo em ingles, portugues e espanhol. Cada conceito lista as formas de cada idioma; a PRIMEIRA e a que sai na traducao, as demais servem para reconhecer a entrada. Existe para o tradutor nao ficar mudo quando nenhuma API responde, e porque em giria de jogo ('gg', 'ty', 'afk') ele acerta mais que o Google, que traduz ao pe da letra.",
+ "conceitos": [
+  {
+   "en": [
+    "hi",
+    "hello",
+    "hey",
+    "yo"
+   ],
+   "pt": [
+    "oi",
+    "ola",
+    "e ai"
+   ],
+   "es": [
+    "hola",
+    "buenas"
+   ]
+  },
+  {
+   "en": [
+    "good luck",
+    "gl"
+   ],
+   "pt": [
+    "boa sorte",
+    "bs"
+   ],
+   "es": [
+    "buena suerte",
+    "suerte"
+   ]
+  },
+  {
+   "en": [
+    "have fun",
+    "hf"
+   ],
+   "pt": [
+    "divirta-se"
+   ],
+   "es": [
+    "diviertete"
+   ]
+  },
+  {
+   "en": [
+    "good game",
+    "gg"
+   ],
+   "pt": [
+    "bom jogo",
+    "bj"
+   ],
+   "es": [
+    "buen juego",
+    "bj"
+   ]
+  },
+  {
+   "en": [
+    "good game well played",
+    "ggwp"
+   ],
+   "pt": [
+    "bom jogo bem jogado"
+   ],
+   "es": [
+    "buen juego bien jugado"
+   ]
+  },
+  {
+   "en": [
+    "well played",
+    "wp"
+   ],
+   "pt": [
+    "bem jogado"
+   ],
+   "es": [
+    "bien jugado"
+   ]
+  },
+  {
+   "en": [
+    "thanks",
+    "thank you",
+    "ty",
+    "thx",
+    "tks"
+   ],
+   "pt": [
+    "obrigado",
+    "valeu",
+    "vlw",
+    "obg"
+   ],
+   "es": [
+    "gracias",
+    "gr"
+   ]
+  },
+  {
+   "en": [
+    "you are welcome",
+    "yw",
+    "np",
+    "no problem"
+   ],
+   "pt": [
+    "de nada",
+    "sem problema"
+   ],
+   "es": [
+    "de nada",
+    "sin problema"
+   ]
+  },
+  {
+   "en": [
+    "sorry",
+    "sry",
+    "my bad"
+   ],
+   "pt": [
+    "desculpa",
+    "foi mal"
+   ],
+   "es": [
+    "perdon",
+    "lo siento"
+   ]
+  },
+  {
+   "en": [
+    "please",
+    "plz",
+    "pls"
+   ],
+   "pt": [
+    "por favor",
+    "pf"
+   ],
+   "es": [
+    "por favor",
+    "pf"
+   ]
+  },
+  {
+   "en": [
+    "bye",
+    "cya",
+    "see you",
+    "gtg",
+    "got to go"
+   ],
+   "pt": [
+    "tchau",
+    "ate mais",
+    "vou nessa"
+   ],
+   "es": [
+    "adios",
+    "hasta luego"
+   ]
+  },
+  {
+   "en": [
+    "welcome"
+   ],
+   "pt": [
+    "bem-vindo"
+   ],
+   "es": [
+    "bienvenido"
+   ]
+  },
+  {
+   "en": [
+    "congratulations",
+    "grats",
+    "gz"
+   ],
+   "pt": [
+    "parabens"
+   ],
+   "es": [
+    "felicidades",
+    "felicitaciones"
+   ]
+  },
+  {
+   "en": [
+    "nice",
+    "good",
+    "great",
+    "cool"
+   ],
+   "pt": [
+    "legal",
+    "bom",
+    "otimo"
+   ],
+   "es": [
+    "bien",
+    "genial",
+    "bueno"
+   ]
+  },
+  {
+   "en": [
+    "ok",
+    "okay",
+    "k"
+   ],
+   "pt": [
+    "ok",
+    "certo",
+    "beleza"
+   ],
+   "es": [
+    "ok",
+    "vale",
+    "bueno"
+   ]
+  },
+  {
+   "en": [
+    "yes",
+    "yep",
+    "yeah",
+    "yup"
+   ],
+   "pt": [
+    "sim",
+    "isso"
+   ],
+   "es": [
+    "si",
+    "claro"
+   ]
+  },
+  {
+   "en": [
+    "no",
+    "nope",
+    "nah"
+   ],
+   "pt": [
+    "nao"
+   ],
+   "es": [
+    "no"
+   ]
+  },
+  {
+   "en": [
+    "maybe"
+   ],
+   "pt": [
+    "talvez"
+   ],
+   "es": [
+    "quiza",
+    "tal vez"
+   ]
+  },
+  {
+   "en": [
+    "wait",
+    "hold on",
+    "hold"
+   ],
+   "pt": [
+    "espera",
+    "espere"
+   ],
+   "es": [
+    "espera",
+    "aguarda"
+   ]
+  },
+  {
+   "en": [
+    "ready",
+    "rdy"
+   ],
+   "pt": [
+    "pronto"
+   ],
+   "es": [
+    "listo"
+   ]
+  },
+  {
+   "en": [
+    "not ready"
+   ],
+   "pt": [
+    "nao estou pronto"
+   ],
+   "es": [
+    "no estoy listo"
+   ]
+  },
+  {
+   "en": [
+    "go",
+    "lets go"
+   ],
+   "pt": [
+    "vai",
+    "bora",
+    "vamos"
+   ],
+   "es": [
+    "vamos",
+    "dale"
+   ]
+  },
+  {
+   "en": [
+    "stop"
+   ],
+   "pt": [
+    "para",
+    "pare"
+   ],
+   "es": [
+    "para",
+    "alto"
+   ]
+  },
+  {
+   "en": [
+    "start"
+   ],
+   "pt": [
+    "comecar",
+    "comeca"
+   ],
+   "es": [
+    "empezar",
+    "empieza"
+   ]
+  },
+  {
+   "en": [
+    "again"
+   ],
+   "pt": [
+    "de novo"
+   ],
+   "es": [
+    "otra vez"
+   ]
+  },
+  {
+   "en": [
+    "fast",
+    "quick",
+    "hurry"
+   ],
+   "pt": [
+    "rapido",
+    "depressa"
+   ],
+   "es": [
+    "rapido",
+    "deprisa"
+   ]
+  },
+  {
+   "en": [
+    "slow"
+   ],
+   "pt": [
+    "devagar",
+    "lento"
+   ],
+   "es": [
+    "lento",
+    "despacio"
+   ]
+  },
+  {
+   "en": [
+    "now"
+   ],
+   "pt": [
+    "agora"
+   ],
+   "es": [
+    "ahora"
+   ]
+  },
+  {
+   "en": [
+    "later"
+   ],
+   "pt": [
+    "depois"
+   ],
+   "es": [
+    "despues"
+   ]
+  },
+  {
+   "en": [
+    "never"
+   ],
+   "pt": [
+    "nunca"
+   ],
+   "es": [
+    "nunca"
+   ]
+  },
+  {
+   "en": [
+    "always"
+   ],
+   "pt": [
+    "sempre"
+   ],
+   "es": [
+    "siempre"
+   ]
+  },
+  {
+   "en": [
+    "attack",
+    "atk",
+    "attacking"
+   ],
+   "pt": [
+    "ataque",
+    "atacando"
+   ],
+   "es": [
+    "ataque",
+    "atacando"
+   ]
+  },
+  {
+   "en": [
+    "defend",
+    "defense",
+    "def"
+   ],
+   "pt": [
+    "defenda",
+    "defesa"
+   ],
+   "es": [
+    "defiende",
+    "defensa"
+   ]
+  },
+  {
+   "en": [
+    "retreat",
+    "fall back",
+    "back"
+   ],
+   "pt": [
+    "recuar",
+    "recua",
+    "volta"
+   ],
+   "es": [
+    "retirada",
+    "retrocede"
+   ]
+  },
+  {
+   "en": [
+    "push"
+   ],
+   "pt": [
+    "avancar",
+    "avanca"
+   ],
+   "es": [
+    "avanzar",
+    "avanza"
+   ]
+  },
+  {
+   "en": [
+    "rush"
+   ],
+   "pt": [
+    "rush",
+    "ataque rapido"
+   ],
+   "es": [
+    "rush",
+    "ataque rapido"
+   ]
+  },
+  {
+   "en": [
+    "raid"
+   ],
+   "pt": [
+    "assedio",
+    "investida"
+   ],
+   "es": [
+    "incursion"
+   ]
+  },
+  {
+   "en": [
+    "boom",
+    "booming"
+   ],
+   "pt": [
+    "crescer",
+    "economia"
+   ],
+   "es": [
+    "crecer",
+    "economia"
+   ]
+  },
+  {
+   "en": [
+    "turtle",
+    "turtling"
+   ],
+   "pt": [
+    "fechar",
+    "defender tudo"
+   ],
+   "es": [
+    "encerrarse"
+   ]
+  },
+  {
+   "en": [
+    "flank"
+   ],
+   "pt": [
+    "flanco",
+    "pelo lado"
+   ],
+   "es": [
+    "flanco",
+    "por el lado"
+   ]
+  },
+  {
+   "en": [
+    "surround"
+   ],
+   "pt": [
+    "cercar"
+   ],
+   "es": [
+    "rodear"
+   ]
+  },
+  {
+   "en": [
+    "kill",
+    "killed"
+   ],
+   "pt": [
+    "matar",
+    "matou"
+   ],
+   "es": [
+    "matar",
+    "mato"
+   ]
+  },
+  {
+   "en": [
+    "dead",
+    "died"
+   ],
+   "pt": [
+    "morto",
+    "morreu"
+   ],
+   "es": [
+    "muerto",
+    "murio"
+   ]
+  },
+  {
+   "en": [
+    "lost"
+   ],
+   "pt": [
+    "perdi",
+    "perdeu"
+   ],
+   "es": [
+    "perdi",
+    "perdio"
+   ]
+  },
+  {
+   "en": [
+    "win",
+    "won",
+    "winning"
+   ],
+   "pt": [
+    "ganhar",
+    "ganhei",
+    "ganhando"
+   ],
+   "es": [
+    "ganar",
+    "gane",
+    "ganando"
+   ]
+  },
+  {
+   "en": [
+    "lose",
+    "losing"
+   ],
+   "pt": [
+    "perder",
+    "perdendo"
+   ],
+   "es": [
+    "perder",
+    "perdiendo"
+   ]
+  },
+  {
+   "en": [
+    "help",
+    "help me"
+   ],
+   "pt": [
+    "ajuda",
+    "me ajuda",
+    "socorro"
+   ],
+   "es": [
+    "ayuda",
+    "ayudame"
+   ]
+  },
+  {
+   "en": [
+    "coming",
+    "on my way",
+    "omw"
+   ],
+   "pt": [
+    "indo",
+    "estou indo",
+    "ja vou"
+   ],
+   "es": [
+    "voy",
+    "ya voy"
+   ]
+  },
+  {
+   "en": [
+    "under attack"
+   ],
+   "pt": [
+    "sob ataque",
+    "estou sendo atacado"
+   ],
+   "es": [
+    "bajo ataque",
+    "me atacan"
+   ]
+  },
+  {
+   "en": [
+    "they are attacking me"
+   ],
+   "pt": [
+    "estao me atacando"
+   ],
+   "es": [
+    "me estan atacando"
+   ]
+  },
+  {
+   "en": [
+    "enemy",
+    "enemies"
+   ],
+   "pt": [
+    "inimigo",
+    "inimigos"
+   ],
+   "es": [
+    "enemigo",
+    "enemigos"
+   ]
+  },
+  {
+   "en": [
+    "ally",
+    "allies",
+    "team"
+   ],
+   "pt": [
+    "aliado",
+    "aliados",
+    "time"
+   ],
+   "es": [
+    "aliado",
+    "aliados",
+    "equipo"
+   ]
+  },
+  {
+   "en": [
+    "army"
+   ],
+   "pt": [
+    "exercito"
+   ],
+   "es": [
+    "ejercito"
+   ]
+  },
+  {
+   "en": [
+    "fight"
+   ],
+   "pt": [
+    "lutar",
+    "luta"
+   ],
+   "es": [
+    "pelear",
+    "pelea"
+   ]
+  },
+  {
+   "en": [
+    "strong"
+   ],
+   "pt": [
+    "forte"
+   ],
+   "es": [
+    "fuerte"
+   ]
+  },
+  {
+   "en": [
+    "weak"
+   ],
+   "pt": [
+    "fraco"
+   ],
+   "es": [
+    "debil"
+   ]
+  },
+  {
+   "en": [
+    "careful",
+    "watch out",
+    "look out"
+   ],
+   "pt": [
+    "cuidado"
+   ],
+   "es": [
+    "cuidado",
+    "ojo"
+   ]
+  },
+  {
+   "en": [
+    "danger"
+   ],
+   "pt": [
+    "perigo"
+   ],
+   "es": [
+    "peligro"
+   ]
+  },
+  {
+   "en": [
+    "safe"
+   ],
+   "pt": [
+    "seguro"
+   ],
+   "es": [
+    "seguro"
+   ]
+  },
+  {
+   "en": [
+    "surrender",
+    "resign",
+    "gg wp i resign"
+   ],
+   "pt": [
+    "desistir",
+    "me rendo"
+   ],
+   "es": [
+    "rendirse",
+    "me rindo"
+   ]
+  },
+  {
+   "en": [
+    "unit",
+    "units"
+   ],
+   "pt": [
+    "unidade",
+    "unidades"
+   ],
+   "es": [
+    "unidad",
+    "unidades"
+   ]
+  },
+  {
+   "en": [
+    "soldier",
+    "soldiers"
+   ],
+   "pt": [
+    "soldado",
+    "soldados"
+   ],
+   "es": [
+    "soldado",
+    "soldados"
+   ]
+  },
+  {
+   "en": [
+    "infantry"
+   ],
+   "pt": [
+    "infantaria"
+   ],
+   "es": [
+    "infanteria"
+   ]
+  },
+  {
+   "en": [
+    "cavalry",
+    "cav",
+    "horse"
+   ],
+   "pt": [
+    "cavalaria",
+    "cavalo"
+   ],
+   "es": [
+    "caballeria",
+    "caballo"
+   ]
+  },
+  {
+   "en": [
+    "archer",
+    "archers"
+   ],
+   "pt": [
+    "arqueiro",
+    "arqueiros"
+   ],
+   "es": [
+    "arquero",
+    "arqueros"
+   ]
+  },
+  {
+   "en": [
+    "spearman",
+    "spear",
+    "spears"
+   ],
+   "pt": [
+    "lanceiro",
+    "lanca"
+   ],
+   "es": [
+    "lancero",
+    "lanza"
+   ]
+  },
+  {
+   "en": [
+    "swordsman",
+    "sword",
+    "swords"
+   ],
+   "pt": [
+    "espadachim",
+    "espada"
+   ],
+   "es": [
+    "espadachin",
+    "espada"
+   ]
+  },
+  {
+   "en": [
+    "slinger",
+    "slingers"
+   ],
+   "pt": [
+    "fundeiro"
+   ],
+   "es": [
+    "hondero"
+   ]
+  },
+  {
+   "en": [
+    "javelin",
+    "javelineer"
+   ],
+   "pt": [
+    "dardo",
+    "lancador de dardos"
+   ],
+   "es": [
+    "jabalina",
+    "jabalinero"
+   ]
+  },
+  {
+   "en": [
+    "skirmisher"
+   ],
+   "pt": [
+    "escaramucador"
+   ],
+   "es": [
+    "escaramuzador"
+   ]
+  },
+  {
+   "en": [
+    "champion",
+    "champions",
+    "champs"
+   ],
+   "pt": [
+    "campeao",
+    "campeoes"
+   ],
+   "es": [
+    "campeon",
+    "campeones"
+   ]
+  },
+  {
+   "en": [
+    "hero"
+   ],
+   "pt": [
+    "heroi"
+   ],
+   "es": [
+    "heroe"
+   ]
+  },
+  {
+   "en": [
+    "healer",
+    "priest"
+   ],
+   "pt": [
+    "curandeiro",
+    "sacerdote"
+   ],
+   "es": [
+    "sanador",
+    "sacerdote"
+   ]
+  },
+  {
+   "en": [
+    "siege",
+    "ram",
+    "catapult"
+   ],
+   "pt": [
+    "cerco",
+    "ariete",
+    "catapulta"
+   ],
+   "es": [
+    "asedio",
+    "ariete",
+    "catapulta"
+   ]
+  },
+  {
+   "en": [
+    "ship",
+    "ships",
+    "boat"
+   ],
+   "pt": [
+    "navio",
+    "navios",
+    "barco"
+   ],
+   "es": [
+    "barco",
+    "barcos",
+    "nave"
+   ]
+  },
+  {
+   "en": [
+    "worker",
+    "workers",
+    "villager",
+    "villagers",
+    "vills"
+   ],
+   "pt": [
+    "trabalhador",
+    "trabalhadores",
+    "aldeao",
+    "aldeoes"
+   ],
+   "es": [
+    "trabajador",
+    "trabajadores",
+    "aldeano",
+    "aldeanos"
+   ]
+  },
+  {
+   "en": [
+    "woman",
+    "women",
+    "female"
+   ],
+   "pt": [
+    "mulher",
+    "mulheres",
+    "aldea"
+   ],
+   "es": [
+    "mujer",
+    "mujeres"
+   ]
+  },
+  {
+   "en": [
+    "scout",
+    "scouting"
+   ],
+   "pt": [
+    "explorador",
+    "explorar"
+   ],
+   "es": [
+    "explorador",
+    "explorar"
+   ]
+  },
+  {
+   "en": [
+    "merc",
+    "mercenary"
+   ],
+   "pt": [
+    "mercenario"
+   ],
+   "es": [
+    "mercenario"
+   ]
+  },
+  {
+   "en": [
+    "dog",
+    "war dog"
+   ],
+   "pt": [
+    "cao",
+    "cao de guerra"
+   ],
+   "es": [
+    "perro",
+    "perro de guerra"
+   ]
+  },
+  {
+   "en": [
+    "elephant"
+   ],
+   "pt": [
+    "elefante"
+   ],
+   "es": [
+    "elefante"
+   ]
+  },
+  {
+   "en": [
+    "building",
+    "buildings"
+   ],
+   "pt": [
+    "construcao",
+    "predio",
+    "predios"
+   ],
+   "es": [
+    "edificio",
+    "edificios"
+   ]
+  },
+  {
+   "en": [
+    "base"
+   ],
+   "pt": [
+    "base"
+   ],
+   "es": [
+    "base"
+   ]
+  },
+  {
+   "en": [
+    "civic center",
+    "cc"
+   ],
+   "pt": [
+    "centro civico",
+    "cc"
+   ],
+   "es": [
+    "centro civico",
+    "cc"
+   ]
+  },
+  {
+   "en": [
+    "house",
+    "houses"
+   ],
+   "pt": [
+    "casa",
+    "casas"
+   ],
+   "es": [
+    "casa",
+    "casas"
+   ]
+  },
+  {
+   "en": [
+    "farm",
+    "farms",
+    "field"
+   ],
+   "pt": [
+    "fazenda",
+    "fazendas",
+    "campo"
+   ],
+   "es": [
+    "granja",
+    "granjas",
+    "campo"
+   ]
+  },
+  {
+   "en": [
+    "farmstead"
+   ],
+   "pt": [
+    "celeiro"
+   ],
+   "es": [
+    "alqueria"
+   ]
+  },
+  {
+   "en": [
+    "storehouse",
+    "drop",
+    "dropsite"
+   ],
+   "pt": [
+    "armazem",
+    "deposito"
+   ],
+   "es": [
+    "almacen",
+    "deposito"
+   ]
+  },
+  {
+   "en": [
+    "barracks",
+    "rax"
+   ],
+   "pt": [
+    "quartel"
+   ],
+   "es": [
+    "cuartel"
+   ]
+  },
+  {
+   "en": [
+    "stable",
+    "stables"
+   ],
+   "pt": [
+    "estabulo"
+   ],
+   "es": [
+    "establo"
+   ]
+  },
+  {
+   "en": [
+    "tower",
+    "towers"
+   ],
+   "pt": [
+    "torre",
+    "torres"
+   ],
+   "es": [
+    "torre",
+    "torres"
+   ]
+  },
+  {
+   "en": [
+    "fortress",
+    "fort"
+   ],
+   "pt": [
+    "fortaleza",
+    "forte"
+   ],
+   "es": [
+    "fortaleza",
+    "fuerte"
+   ]
+  },
+  {
+   "en": [
+    "wall",
+    "walls"
+   ],
+   "pt": [
+    "muralha",
+    "muro"
+   ],
+   "es": [
+    "muralla",
+    "muro"
+   ]
+  },
+  {
+   "en": [
+    "gate"
+   ],
+   "pt": [
+    "portao"
+   ],
+   "es": [
+    "puerta"
+   ]
+  },
+  {
+   "en": [
+    "temple"
+   ],
+   "pt": [
+    "templo"
+   ],
+   "es": [
+    "templo"
+   ]
+  },
+  {
+   "en": [
+    "market"
+   ],
+   "pt": [
+    "mercado"
+   ],
+   "es": [
+    "mercado"
+   ]
+  },
+  {
+   "en": [
+    "blacksmith",
+    "forge"
+   ],
+   "pt": [
+    "ferreiro",
+    "forja"
+   ],
+   "es": [
+    "herrero",
+    "forja"
+   ]
+  },
+  {
+   "en": [
+    "dock",
+    "port",
+    "harbor"
+   ],
+   "pt": [
+    "porto",
+    "doca"
+   ],
+   "es": [
+    "puerto",
+    "muelle"
+   ]
+  },
+  {
+   "en": [
+    "outpost"
+   ],
+   "pt": [
+    "posto avancado"
+   ],
+   "es": [
+    "puesto avanzado"
+   ]
+  },
+  {
+   "en": [
+    "wonder"
+   ],
+   "pt": [
+    "maravilha"
+   ],
+   "es": [
+    "maravilla"
+   ]
+  },
+  {
+   "en": [
+    "build",
+    "building it",
+    "make"
+   ],
+   "pt": [
+    "construir",
+    "constroi",
+    "faz"
+   ],
+   "es": [
+    "construir",
+    "construye",
+    "haz"
+   ]
+  },
+  {
+   "en": [
+    "resource",
+    "resources",
+    "res"
+   ],
+   "pt": [
+    "recurso",
+    "recursos"
+   ],
+   "es": [
+    "recurso",
+    "recursos"
+   ]
+  },
+  {
+   "en": [
+    "food"
+   ],
+   "pt": [
+    "comida"
+   ],
+   "es": [
+    "comida"
+   ]
+  },
+  {
+   "en": [
+    "wood"
+   ],
+   "pt": [
+    "madeira"
+   ],
+   "es": [
+    "madera"
+   ]
+  },
+  {
+   "en": [
+    "stone"
+   ],
+   "pt": [
+    "pedra"
+   ],
+   "es": [
+    "piedra"
+   ]
+  },
+  {
+   "en": [
+    "metal",
+    "gold"
+   ],
+   "pt": [
+    "metal",
+    "ouro"
+   ],
+   "es": [
+    "metal",
+    "oro"
+   ]
+  },
+  {
+   "en": [
+    "berry",
+    "berries",
+    "fruit"
+   ],
+   "pt": [
+    "fruta",
+    "frutas",
+    "arbusto"
+   ],
+   "es": [
+    "fruta",
+    "frutas",
+    "baya"
+   ]
+  },
+  {
+   "en": [
+    "tree",
+    "trees",
+    "forest"
+   ],
+   "pt": [
+    "arvore",
+    "arvores",
+    "floresta"
+   ],
+   "es": [
+    "arbol",
+    "arboles",
+    "bosque"
+   ]
+  },
+  {
+   "en": [
+    "mine",
+    "mining"
+   ],
+   "pt": [
+    "mina",
+    "minerar"
+   ],
+   "es": [
+    "mina",
+    "minar"
+   ]
+  },
+  {
+   "en": [
+    "hunt",
+    "hunting",
+    "animal"
+   ],
+   "pt": [
+    "cacar",
+    "caca",
+    "animal"
+   ],
+   "es": [
+    "cazar",
+    "caza",
+    "animal"
+   ]
+  },
+  {
+   "en": [
+    "fish",
+    "fishing"
+   ],
+   "pt": [
+    "peixe",
+    "pescar"
+   ],
+   "es": [
+    "pez",
+    "pescar"
+   ]
+  },
+  {
+   "en": [
+    "gather",
+    "gathering",
+    "collect"
+   ],
+   "pt": [
+    "coletar",
+    "colher",
+    "juntar"
+   ],
+   "es": [
+    "recolectar",
+    "recoger"
+   ]
+  },
+  {
+   "en": [
+    "trade",
+    "trading",
+    "trader"
+   ],
+   "pt": [
+    "comercio",
+    "comerciante"
+   ],
+   "es": [
+    "comercio",
+    "comerciante"
+   ]
+  },
+  {
+   "en": [
+    "economy",
+    "eco"
+   ],
+   "pt": [
+    "economia"
+   ],
+   "es": [
+    "economia"
+   ]
+  },
+  {
+   "en": [
+    "population",
+    "pop"
+   ],
+   "pt": [
+    "populacao",
+    "pop"
+   ],
+   "es": [
+    "poblacion",
+    "pop"
+   ]
+  },
+  {
+   "en": [
+    "cost",
+    "expensive",
+    "cheap"
+   ],
+   "pt": [
+    "custo",
+    "caro",
+    "barato"
+   ],
+   "es": [
+    "costo",
+    "caro",
+    "barato"
+   ]
+  },
+  {
+   "en": [
+    "need",
+    "i need"
+   ],
+   "pt": [
+    "preciso",
+    "preciso de"
+   ],
+   "es": [
+    "necesito"
+   ]
+  },
+  {
+   "en": [
+    "send",
+    "give"
+   ],
+   "pt": [
+    "manda",
+    "envia",
+    "da"
+   ],
+   "es": [
+    "manda",
+    "envia",
+    "dame"
+   ]
+  },
+  {
+   "en": [
+    "tribute"
+   ],
+   "pt": [
+    "tributo",
+    "doar"
+   ],
+   "es": [
+    "tributo",
+    "donar"
+   ]
+  },
+  {
+   "en": [
+    "upgrade",
+    "tech",
+    "research"
+   ],
+   "pt": [
+    "melhoria",
+    "tecnologia",
+    "pesquisa"
+   ],
+   "es": [
+    "mejora",
+    "tecnologia",
+    "investigacion"
+   ]
+  },
+  {
+   "en": [
+    "age",
+    "phase"
+   ],
+   "pt": [
+    "era",
+    "fase"
+   ],
+   "es": [
+    "edad",
+    "fase"
+   ]
+  },
+  {
+   "en": [
+    "town phase",
+    "phase 2",
+    "p2"
+   ],
+   "pt": [
+    "fase de cidade",
+    "fase 2"
+   ],
+   "es": [
+    "fase de ciudad",
+    "fase 2"
+   ]
+  },
+  {
+   "en": [
+    "city phase",
+    "phase 3",
+    "p3"
+   ],
+   "pt": [
+    "fase de metropole",
+    "fase 3"
+   ],
+   "es": [
+    "fase de ciudad grande",
+    "fase 3"
+   ]
+  },
+  {
+   "en": [
+    "map"
+   ],
+   "pt": [
+    "mapa"
+   ],
+   "es": [
+    "mapa"
+   ]
+  },
+  {
+   "en": [
+    "north"
+   ],
+   "pt": [
+    "norte"
+   ],
+   "es": [
+    "norte"
+   ]
+  },
+  {
+   "en": [
+    "south"
+   ],
+   "pt": [
+    "sul"
+   ],
+   "es": [
+    "sur"
+   ]
+  },
+  {
+   "en": [
+    "east"
+   ],
+   "pt": [
+    "leste"
+   ],
+   "es": [
+    "este"
+   ]
+  },
+  {
+   "en": [
+    "west"
+   ],
+   "pt": [
+    "oeste"
+   ],
+   "es": [
+    "oeste"
+   ]
+  },
+  {
+   "en": [
+    "left"
+   ],
+   "pt": [
+    "esquerda"
+   ],
+   "es": [
+    "izquierda"
+   ]
+  },
+  {
+   "en": [
+    "right"
+   ],
+   "pt": [
+    "direita"
+   ],
+   "es": [
+    "derecha"
+   ]
+  },
+  {
+   "en": [
+    "up",
+    "top"
+   ],
+   "pt": [
+    "cima",
+    "em cima"
+   ],
+   "es": [
+    "arriba"
+   ]
+  },
+  {
+   "en": [
+    "down",
+    "bottom"
+   ],
+   "pt": [
+    "baixo",
+    "embaixo"
+   ],
+   "es": [
+    "abajo"
+   ]
+  },
+  {
+   "en": [
+    "center",
+    "middle",
+    "mid"
+   ],
+   "pt": [
+    "centro",
+    "meio"
+   ],
+   "es": [
+    "centro",
+    "medio"
+   ]
+  },
+  {
+   "en": [
+    "corner"
+   ],
+   "pt": [
+    "canto"
+   ],
+   "es": [
+    "esquina"
+   ]
+  },
+  {
+   "en": [
+    "here"
+   ],
+   "pt": [
+    "aqui"
+   ],
+   "es": [
+    "aqui"
+   ]
+  },
+  {
+   "en": [
+    "there"
+   ],
+   "pt": [
+    "la",
+    "ali"
+   ],
+   "es": [
+    "alla",
+    "ahi"
+   ]
+  },
+  {
+   "en": [
+    "near",
+    "close"
+   ],
+   "pt": [
+    "perto"
+   ],
+   "es": [
+    "cerca"
+   ]
+  },
+  {
+   "en": [
+    "far"
+   ],
+   "pt": [
+    "longe"
+   ],
+   "es": [
+    "lejos"
+   ]
+  },
+  {
+   "en": [
+    "behind"
+   ],
+   "pt": [
+    "atras"
+   ],
+   "es": [
+    "detras"
+   ]
+  },
+  {
+   "en": [
+    "front"
+   ],
+   "pt": [
+    "frente"
+   ],
+   "es": [
+    "frente"
+   ]
+  },
+  {
+   "en": [
+    "island"
+   ],
+   "pt": [
+    "ilha"
+   ],
+   "es": [
+    "isla"
+   ]
+  },
+  {
+   "en": [
+    "water",
+    "sea"
+   ],
+   "pt": [
+    "agua",
+    "mar"
+   ],
+   "es": [
+    "agua",
+    "mar"
+   ]
+  },
+  {
+   "en": [
+    "hill",
+    "mountain"
+   ],
+   "pt": [
+    "morro",
+    "montanha"
+   ],
+   "es": [
+    "colina",
+    "montana"
+   ]
+  },
+  {
+   "en": [
+    "blue"
+   ],
+   "pt": [
+    "azul"
+   ],
+   "es": [
+    "azul"
+   ]
+  },
+  {
+   "en": [
+    "red"
+   ],
+   "pt": [
+    "vermelho"
+   ],
+   "es": [
+    "rojo"
+   ]
+  },
+  {
+   "en": [
+    "green"
+   ],
+   "pt": [
+    "verde"
+   ],
+   "es": [
+    "verde"
+   ]
+  },
+  {
+   "en": [
+    "yellow"
+   ],
+   "pt": [
+    "amarelo"
+   ],
+   "es": [
+    "amarillo"
+   ]
+  },
+  {
+   "en": [
+    "purple"
+   ],
+   "pt": [
+    "roxo"
+   ],
+   "es": [
+    "morado"
+   ]
+  },
+  {
+   "en": [
+    "orange"
+   ],
+   "pt": [
+    "laranja"
+   ],
+   "es": [
+    "naranja"
+   ]
+  },
+  {
+   "en": [
+    "white"
+   ],
+   "pt": [
+    "branco"
+   ],
+   "es": [
+    "blanco"
+   ]
+  },
+  {
+   "en": [
+    "black"
+   ],
+   "pt": [
+    "preto"
+   ],
+   "es": [
+    "negro"
+   ]
+  },
+  {
+   "en": [
+    "pink"
+   ],
+   "pt": [
+    "rosa"
+   ],
+   "es": [
+    "rosa"
+   ]
+  },
+  {
+   "en": [
+    "cyan"
+   ],
+   "pt": [
+    "ciano"
+   ],
+   "es": [
+    "cian"
+   ]
+  },
+  {
+   "en": [
+    "game",
+    "match"
+   ],
+   "pt": [
+    "jogo",
+    "partida"
+   ],
+   "es": [
+    "juego",
+    "partida"
+   ]
+  },
+  {
+   "en": [
+    "player",
+    "players"
+   ],
+   "pt": [
+    "jogador",
+    "jogadores"
+   ],
+   "es": [
+    "jugador",
+    "jugadores"
+   ]
+  },
+  {
+   "en": [
+    "host"
+   ],
+   "pt": [
+    "anfitriao",
+    "host"
+   ],
+   "es": [
+    "anfitrion",
+    "host"
+   ]
+  },
+  {
+   "en": [
+    "team game",
+    "tg"
+   ],
+   "pt": [
+    "jogo em equipe"
+   ],
+   "es": [
+    "juego en equipo"
+   ]
+  },
+  {
+   "en": [
+    "one versus one",
+    "1v1"
+   ],
+   "pt": [
+    "um contra um",
+    "1v1"
+   ],
+   "es": [
+    "uno contra uno",
+    "1v1"
+   ]
+  },
+  {
+   "en": [
+    "free for all",
+    "ffa"
+   ],
+   "pt": [
+    "todos contra todos"
+   ],
+   "es": [
+    "todos contra todos"
+   ]
+  },
+  {
+   "en": [
+    "rematch"
+   ],
+   "pt": [
+    "revanche"
+   ],
+   "es": [
+    "revancha"
+   ]
+  },
+  {
+   "en": [
+    "pause",
+    "paused"
+   ],
+   "pt": [
+    "pausa",
+    "pausado"
+   ],
+   "es": [
+    "pausa",
+    "pausado"
+   ]
+  },
+  {
+   "en": [
+    "resume",
+    "unpause"
+   ],
+   "pt": [
+    "continuar",
+    "despausar"
+   ],
+   "es": [
+    "continuar",
+    "reanudar"
+   ]
+  },
+  {
+   "en": [
+    "lag",
+    "laggy",
+    "lagging"
+   ],
+   "pt": [
+    "lag",
+    "travando"
+   ],
+   "es": [
+    "lag",
+    "va lento"
+   ]
+  },
+  {
+   "en": [
+    "disconnect",
+    "dc",
+    "disconnected"
+   ],
+   "pt": [
+    "caiu",
+    "desconectou"
+   ],
+   "es": [
+    "se cayo",
+    "desconectado"
+   ]
+  },
+  {
+   "en": [
+    "reconnect"
+   ],
+   "pt": [
+    "reconectar"
+   ],
+   "es": [
+    "reconectar"
+   ]
+  },
+  {
+   "en": [
+    "afk",
+    "away"
+   ],
+   "pt": [
+    "afk",
+    "ausente"
+   ],
+   "es": [
+    "afk",
+    "ausente"
+   ]
+  },
+  {
+   "en": [
+    "back",
+    "im back"
+   ],
+   "pt": [
+    "voltei"
+   ],
+   "es": [
+    "volvi"
+   ]
+  },
+  {
+   "en": [
+    "spectator",
+    "spec"
+   ],
+   "pt": [
+    "espectador"
+   ],
+   "es": [
+    "espectador"
+   ]
+  },
+  {
+   "en": [
+    "settings",
+    "options"
+   ],
+   "pt": [
+    "configuracoes",
+    "opcoes"
+   ],
+   "es": [
+    "ajustes",
+    "opciones"
+   ]
+  },
+  {
+   "en": [
+    "difficulty"
+   ],
+   "pt": [
+    "dificuldade"
+   ],
+   "es": [
+    "dificultad"
+   ]
+  },
+  {
+   "en": [
+    "easy"
+   ],
+   "pt": [
+    "facil"
+   ],
+   "es": [
+    "facil"
+   ]
+  },
+  {
+   "en": [
+    "hard"
+   ],
+   "pt": [
+    "dificil"
+   ],
+   "es": [
+    "dificil"
+   ]
+  },
+  {
+   "en": [
+    "team"
+   ],
+   "pt": [
+    "time",
+    "equipe"
+   ],
+   "es": [
+    "equipo"
+   ]
+  },
+  {
+   "en": [
+    "civ",
+    "civilization",
+    "faction"
+   ],
+   "pt": [
+    "civ",
+    "civilizacao"
+   ],
+   "es": [
+    "civ",
+    "civilizacion"
+   ]
+  },
+  {
+   "en": [
+    "random"
+   ],
+   "pt": [
+    "aleatorio"
+   ],
+   "es": [
+    "aleatorio"
+   ]
+  },
+  {
+   "en": [
+    "balance",
+    "balanced"
+   ],
+   "pt": [
+    "equilibrio",
+    "equilibrado"
+   ],
+   "es": [
+    "equilibrio",
+    "equilibrado"
+   ]
+  },
+  {
+   "en": [
+    "cheat",
+    "cheater",
+    "hack"
+   ],
+   "pt": [
+    "trapaca",
+    "trapaceiro"
+   ],
+   "es": [
+    "trampa",
+    "tramposo"
+   ]
+  },
+  {
+   "en": [
+    "noob",
+    "newbie",
+    "new"
+   ],
+   "pt": [
+    "novato",
+    "iniciante"
+   ],
+   "es": [
+    "novato",
+    "principiante"
+   ]
+  },
+  {
+   "en": [
+    "pro",
+    "expert"
+   ],
+   "pt": [
+    "profissional",
+    "bom demais"
+   ],
+   "es": [
+    "profesional",
+    "experto"
+   ]
+  },
+  {
+   "en": [
+    "smurf"
+   ],
+   "pt": [
+    "conta nova",
+    "smurf"
+   ],
+   "es": [
+    "cuenta nueva",
+    "smurf"
+   ]
+  },
+  {
+   "en": [
+    "what"
+   ],
+   "pt": [
+    "o que"
+   ],
+   "es": [
+    "que"
+   ]
+  },
+  {
+   "en": [
+    "who"
+   ],
+   "pt": [
+    "quem"
+   ],
+   "es": [
+    "quien"
+   ]
+  },
+  {
+   "en": [
+    "where"
+   ],
+   "pt": [
+    "onde"
+   ],
+   "es": [
+    "donde"
+   ]
+  },
+  {
+   "en": [
+    "when"
+   ],
+   "pt": [
+    "quando"
+   ],
+   "es": [
+    "cuando"
+   ]
+  },
+  {
+   "en": [
+    "why"
+   ],
+   "pt": [
+    "por que"
+   ],
+   "es": [
+    "por que"
+   ]
+  },
+  {
+   "en": [
+    "how"
+   ],
+   "pt": [
+    "como"
+   ],
+   "es": [
+    "como"
+   ]
+  },
+  {
+   "en": [
+    "how many",
+    "how much"
+   ],
+   "pt": [
+    "quantos",
+    "quanto"
+   ],
+   "es": [
+    "cuantos",
+    "cuanto"
+   ]
+  },
+  {
+   "en": [
+    "which"
+   ],
+   "pt": [
+    "qual"
+   ],
+   "es": [
+    "cual"
+   ]
+  },
+  {
+   "en": [
+    "and"
+   ],
+   "pt": [
+    "e"
+   ],
+   "es": [
+    "y"
+   ]
+  },
+  {
+   "en": [
+    "or"
+   ],
+   "pt": [
+    "ou"
+   ],
+   "es": [
+    "o"
+   ]
+  },
+  {
+   "en": [
+    "but"
+   ],
+   "pt": [
+    "mas"
+   ],
+   "es": [
+    "pero"
+   ]
+  },
+  {
+   "en": [
+    "with"
+   ],
+   "pt": [
+    "com"
+   ],
+   "es": [
+    "con"
+   ]
+  },
+  {
+   "en": [
+    "without"
+   ],
+   "pt": [
+    "sem"
+   ],
+   "es": [
+    "sin"
+   ]
+  },
+  {
+   "en": [
+    "for"
+   ],
+   "pt": [
+    "para"
+   ],
+   "es": [
+    "para"
+   ]
+  },
+  {
+   "en": [
+    "from"
+   ],
+   "pt": [
+    "de"
+   ],
+   "es": [
+    "de"
+   ]
+  },
+  {
+   "en": [
+    "to"
+   ],
+   "pt": [
+    "para"
+   ],
+   "es": [
+    "a"
+   ]
+  },
+  {
+   "en": [
+    "in",
+    "on",
+    "at"
+   ],
+   "pt": [
+    "em",
+    "no",
+    "na"
+   ],
+   "es": [
+    "en"
+   ]
+  },
+  {
+   "en": [
+    "the"
+   ],
+   "pt": [
+    "o"
+   ],
+   "es": [
+    "el"
+   ]
+  },
+  {
+   "en": [
+    "a",
+    "an"
+   ],
+   "pt": [
+    "um"
+   ],
+   "es": [
+    "un"
+   ]
+  },
+  {
+   "en": [
+    "my"
+   ],
+   "pt": [
+    "meu",
+    "minha"
+   ],
+   "es": [
+    "mi"
+   ]
+  },
+  {
+   "en": [
+    "your"
+   ],
+   "pt": [
+    "seu",
+    "sua"
+   ],
+   "es": [
+    "tu"
+   ]
+  },
+  {
+   "en": [
+    "our"
+   ],
+   "pt": [
+    "nosso",
+    "nossa"
+   ],
+   "es": [
+    "nuestro"
+   ]
+  },
+  {
+   "en": [
+    "his",
+    "her",
+    "their"
+   ],
+   "pt": [
+    "dele",
+    "dela",
+    "deles"
+   ],
+   "es": [
+    "su"
+   ]
+  },
+  {
+   "en": [
+    "i",
+    "me"
+   ],
+   "pt": [
+    "eu",
+    "mim"
+   ],
+   "es": [
+    "yo",
+    "mi"
+   ]
+  },
+  {
+   "en": [
+    "you"
+   ],
+   "pt": [
+    "voce"
+   ],
+   "es": [
+    "tu",
+    "usted"
+   ]
+  },
+  {
+   "en": [
+    "we",
+    "us"
+   ],
+   "pt": [
+    "nos"
+   ],
+   "es": [
+    "nosotros"
+   ]
+  },
+  {
+   "en": [
+    "they",
+    "them"
+   ],
+   "pt": [
+    "eles",
+    "elas"
+   ],
+   "es": [
+    "ellos",
+    "ellas"
+   ]
+  },
+  {
+   "en": [
+    "he"
+   ],
+   "pt": [
+    "ele"
+   ],
+   "es": [
+    "el"
+   ]
+  },
+  {
+   "en": [
+    "she"
+   ],
+   "pt": [
+    "ela"
+   ],
+   "es": [
+    "ella"
+   ]
+  },
+  {
+   "en": [
+    "it"
+   ],
+   "pt": [
+    "isso"
+   ],
+   "es": [
+    "eso"
+   ]
+  },
+  {
+   "en": [
+    "this"
+   ],
+   "pt": [
+    "este",
+    "isto"
+   ],
+   "es": [
+    "este",
+    "esto"
+   ]
+  },
+  {
+   "en": [
+    "that"
+   ],
+   "pt": [
+    "aquele",
+    "aquilo"
+   ],
+   "es": [
+    "aquel",
+    "eso"
+   ]
+  },
+  {
+   "en": [
+    "all",
+    "everyone"
+   ],
+   "pt": [
+    "todos",
+    "todo mundo"
+   ],
+   "es": [
+    "todos",
+    "todo el mundo"
+   ]
+  },
+  {
+   "en": [
+    "nobody",
+    "no one"
+   ],
+   "pt": [
+    "ninguem"
+   ],
+   "es": [
+    "nadie"
+   ]
+  },
+  {
+   "en": [
+    "something"
+   ],
+   "pt": [
+    "alguma coisa",
+    "algo"
+   ],
+   "es": [
+    "algo"
+   ]
+  },
+  {
+   "en": [
+    "nothing"
+   ],
+   "pt": [
+    "nada"
+   ],
+   "es": [
+    "nada"
+   ]
+  },
+  {
+   "en": [
+    "more"
+   ],
+   "pt": [
+    "mais"
+   ],
+   "es": [
+    "mas"
+   ]
+  },
+  {
+   "en": [
+    "less"
+   ],
+   "pt": [
+    "menos"
+   ],
+   "es": [
+    "menos"
+   ]
+  },
+  {
+   "en": [
+    "very",
+    "too"
+   ],
+   "pt": [
+    "muito"
+   ],
+   "es": [
+    "muy",
+    "demasiado"
+   ]
+  },
+  {
+   "en": [
+    "little",
+    "few"
+   ],
+   "pt": [
+    "pouco",
+    "poucos"
+   ],
+   "es": [
+    "poco",
+    "pocos"
+   ]
+  },
+  {
+   "en": [
+    "big",
+    "large"
+   ],
+   "pt": [
+    "grande"
+   ],
+   "es": [
+    "grande"
+   ]
+  },
+  {
+   "en": [
+    "small"
+   ],
+   "pt": [
+    "pequeno"
+   ],
+   "es": [
+    "pequeno"
+   ]
+  },
+  {
+   "en": [
+    "good"
+   ],
+   "pt": [
+    "bom"
+   ],
+   "es": [
+    "bueno"
+   ]
+  },
+  {
+   "en": [
+    "bad"
+   ],
+   "pt": [
+    "ruim",
+    "mau"
+   ],
+   "es": [
+    "malo"
+   ]
+  },
+  {
+   "en": [
+    "better"
+   ],
+   "pt": [
+    "melhor"
+   ],
+   "es": [
+    "mejor"
+   ]
+  },
+  {
+   "en": [
+    "worse"
+   ],
+   "pt": [
+    "pior"
+   ],
+   "es": [
+    "peor"
+   ]
+  },
+  {
+   "en": [
+    "first"
+   ],
+   "pt": [
+    "primeiro"
+   ],
+   "es": [
+    "primero"
+   ]
+  },
+  {
+   "en": [
+    "last"
+   ],
+   "pt": [
+    "ultimo"
+   ],
+   "es": [
+    "ultimo"
+   ]
+  },
+  {
+   "en": [
+    "next"
+   ],
+   "pt": [
+    "proximo"
+   ],
+   "es": [
+    "proximo"
+   ]
+  },
+  {
+   "en": [
+    "other",
+    "another"
+   ],
+   "pt": [
+    "outro"
+   ],
+   "es": [
+    "otro"
+   ]
+  },
+  {
+   "en": [
+    "same"
+   ],
+   "pt": [
+    "mesmo"
+   ],
+   "es": [
+    "mismo"
+   ]
+  },
+  {
+   "en": [
+    "only",
+    "just"
+   ],
+   "pt": [
+    "so",
+    "apenas"
+   ],
+   "es": [
+    "solo"
+   ]
+  },
+  {
+   "en": [
+    "also",
+    "too"
+   ],
+   "pt": [
+    "tambem"
+   ],
+   "es": [
+    "tambien"
+   ]
+  },
+  {
+   "en": [
+    "because"
+   ],
+   "pt": [
+    "porque"
+   ],
+   "es": [
+    "porque"
+   ]
+  },
+  {
+   "en": [
+    "if"
+   ],
+   "pt": [
+    "se"
+   ],
+   "es": [
+    "si"
+   ]
+  },
+  {
+   "en": [
+    "can",
+    "able"
+   ],
+   "pt": [
+    "pode",
+    "consegue"
+   ],
+   "es": [
+    "puede"
+   ]
+  },
+  {
+   "en": [
+    "cannot",
+    "cant"
+   ],
+   "pt": [
+    "nao pode",
+    "nao consigo"
+   ],
+   "es": [
+    "no puede",
+    "no puedo"
+   ]
+  },
+  {
+   "en": [
+    "want"
+   ],
+   "pt": [
+    "quero",
+    "quer"
+   ],
+   "es": [
+    "quiero",
+    "quiere"
+   ]
+  },
+  {
+   "en": [
+    "know"
+   ],
+   "pt": [
+    "sei",
+    "sabe"
+   ],
+   "es": [
+    "se",
+    "sabe"
+   ]
+  },
+  {
+   "en": [
+    "think"
+   ],
+   "pt": [
+    "acho",
+    "penso"
+   ],
+   "es": [
+    "creo",
+    "pienso"
+   ]
+  },
+  {
+   "en": [
+    "see",
+    "look"
+   ],
+   "pt": [
+    "ver",
+    "olha"
+   ],
+   "es": [
+    "ver",
+    "mira"
+   ]
+  },
+  {
+   "en": [
+    "come"
+   ],
+   "pt": [
+    "vem",
+    "venha"
+   ],
+   "es": [
+    "ven",
+    "venga"
+   ]
+  },
+  {
+   "en": [
+    "let me"
+   ],
+   "pt": [
+    "deixa eu"
+   ],
+   "es": [
+    "dejame"
+   ]
+  },
+  {
+   "en": [
+    "dont",
+    "do not"
+   ],
+   "pt": [
+    "nao"
+   ],
+   "es": [
+    "no"
+   ]
+  },
+  {
+   "en": [
+    "have",
+    "has"
+   ],
+   "pt": [
+    "tem",
+    "tenho"
+   ],
+   "es": [
+    "tiene",
+    "tengo"
+   ]
+  },
+  {
+   "en": [
+    "is",
+    "are",
+    "am"
+   ],
+   "pt": [
+    "e",
+    "esta"
+   ],
+   "es": [
+    "es",
+    "esta"
+   ]
+  },
+  {
+   "en": [
+    "was",
+    "were"
+   ],
+   "pt": [
+    "era",
+    "estava"
+   ],
+   "es": [
+    "era",
+    "estaba"
+   ]
+  },
+  {
+   "en": [
+    "will"
+   ],
+   "pt": [
+    "vou",
+    "vai"
+   ],
+   "es": [
+    "voy",
+    "va"
+   ]
+  },
+  {
+   "en": [
+    "already"
+   ],
+   "pt": [
+    "ja"
+   ],
+   "es": [
+    "ya"
+   ]
+  },
+  {
+   "en": [
+    "still",
+    "yet"
+   ],
+   "pt": [
+    "ainda"
+   ],
+   "es": [
+    "todavia",
+    "aun"
+   ]
+  },
+  {
+   "en": [
+    "soon"
+   ],
+   "pt": [
+    "logo",
+    "em breve"
+   ],
+   "es": [
+    "pronto"
+   ]
+  },
+  {
+   "en": [
+    "time"
+   ],
+   "pt": [
+    "tempo"
+   ],
+   "es": [
+    "tiempo"
+   ]
+  },
+  {
+   "en": [
+    "minute",
+    "min",
+    "minutes"
+   ],
+   "pt": [
+    "minuto",
+    "minutos"
+   ],
+   "es": [
+    "minuto",
+    "minutos"
+   ]
+  },
+  {
+   "en": [
+    "second",
+    "sec"
+   ],
+   "pt": [
+    "segundo"
+   ],
+   "es": [
+    "segundo"
+   ]
+  },
+  {
+   "en": [
+    "one"
+   ],
+   "pt": [
+    "um"
+   ],
+   "es": [
+    "uno"
+   ]
+  },
+  {
+   "en": [
+    "two"
+   ],
+   "pt": [
+    "dois"
+   ],
+   "es": [
+    "dos"
+   ]
+  },
+  {
+   "en": [
+    "three"
+   ],
+   "pt": [
+    "tres"
+   ],
+   "es": [
+    "tres"
+   ]
+  },
+  {
+   "en": [
+    "four"
+   ],
+   "pt": [
+    "quatro"
+   ],
+   "es": [
+    "cuatro"
+   ]
+  },
+  {
+   "en": [
+    "five"
+   ],
+   "pt": [
+    "cinco"
+   ],
+   "es": [
+    "cinco"
+   ]
+  },
+  {
+   "en": [
+    "ten"
+   ],
+   "pt": [
+    "dez"
+   ],
+   "es": [
+    "diez"
+   ]
+  },
+  {
+   "en": [
+    "hundred"
+   ],
+   "pt": [
+    "cem"
+   ],
+   "es": [
+    "cien"
+   ]
+  },
+  {
+   "en": [
+    "lol",
+    "haha",
+    "hahaha"
+   ],
+   "pt": [
+    "kkkk",
+    "haha"
+   ],
+   "es": [
+    "jaja",
+    "jajaja"
+   ]
+  },
+  {
+   "en": [
+    "wow",
+    "omg"
+   ],
+   "pt": [
+    "nossa",
+    "caramba"
+   ],
+   "es": [
+    "guau",
+    "madre mia"
+   ]
+  },
+  {
+   "en": [
+    "nice one",
+    "gj",
+    "good job"
+   ],
+   "pt": [
+    "boa",
+    "mandou bem"
+   ],
+   "es": [
+    "bien hecho"
+   ]
+  },
+  {
+   "en": [
+    "what the"
+   ],
+   "pt": [
+    "mas o que"
+   ],
+   "es": [
+    "pero que"
+   ]
+  },
+  {
+   "en": [
+    "easy money",
+    "ez"
+   ],
+   "pt": [
+    "facil"
+   ],
+   "es": [
+    "facil"
+   ]
+  },
+  {
+   "en": [
+    "rip"
+   ],
+   "pt": [
+    "era",
+    "ja era"
+   ],
+   "es": [
+    "se acabo"
+   ]
+  },
+  {
+   "en": [
+    "brb",
+    "be right back"
+   ],
+   "pt": [
+    "ja volto"
+   ],
+   "es": [
+    "ahora vuelvo"
+   ]
+  },
+  {
+   "en": [
+    "idk",
+    "i dont know"
+   ],
+   "pt": [
+    "nao sei"
+   ],
+   "es": [
+    "no se"
+   ]
+  },
+  {
+   "en": [
+    "imo",
+    "i think"
+   ],
+   "pt": [
+    "na minha opiniao",
+    "acho que"
+   ],
+   "es": [
+    "en mi opinion",
+    "creo que"
+   ]
+  },
+  {
+   "en": [
+    "btw"
+   ],
+   "pt": [
+    "a proposito"
+   ],
+   "es": [
+    "por cierto"
+   ]
+  },
+  {
+   "en": [
+    "ping",
+    "flare"
+   ],
+   "pt": [
+    "sinal",
+    "marcar"
+   ],
+   "es": [
+    "senal",
+    "marcar"
+   ]
+  },
+  {
+   "en": [
+    "report"
+   ],
+   "pt": [
+    "denunciar"
+   ],
+   "es": [
+    "reportar"
+   ]
+  },
+  {
+   "en": [
+    "mute"
+   ],
+   "pt": [
+    "silenciar"
+   ],
+   "es": [
+    "silenciar"
+   ]
+  },
+  {
+   "en": [
+    "nice try"
+   ],
+   "pt": [
+    "boa tentativa"
+   ],
+   "es": [
+    "buen intento"
+   ]
+  },
+  {
+   "en": [
+    "dont worry",
+    "nvm",
+    "never mind"
+   ],
+   "pt": [
+    "nao esquenta",
+    "deixa"
+   ],
+   "es": [
+    "no te preocupes",
+    "olvidalo"
+   ]
+  },
+  {
+   "en": [
+    "come on"
+   ],
+   "pt": [
+    "vamos la",
+    "qual e"
+   ],
+   "es": [
+    "vamos",
+    "dale"
+   ]
+  },
+  {
+   "en": [
+    "are you serious"
+   ],
+   "pt": [
+    "ta falando serio"
+   ],
+   "es": [
+    "en serio"
+   ]
+  },
+  {
+   "en": [
+    "one moment",
+    "one sec",
+    "1 sec"
+   ],
+   "pt": [
+    "um momento",
+    "um segundo"
+   ],
+   "es": [
+    "un momento",
+    "un segundo"
+   ]
+  }
+ ]
+}

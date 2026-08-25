@@ -62,6 +62,17 @@ class RespostaFalsa:
         return self.bruto
 
 
+# As frases deste teste NAO podem estar no dicionario de bolso.
+#
+# Ele foi adicionado em 25/08 e e consultado ANTES das portas do Google para frases curtas
+# conhecidas. "oi" e "hi" estao nele, entao o teste original passou a medir o atalho offline
+# em vez do caminho de rede — os dubles de urlopen nunca eram chamados e cinco assercoes
+# caiam. O sintoma foi util: prova que o atalho realmente tem precedencia.
+#
+# Aqui interessa o ritmo das CHAMADAS, entao as frases sao propositalmente desconhecidas.
+FRASE = "zxqw plkm"
+FRASE_LONGA = "zxqw plkm vbnm"
+
 # O log NAO pode ser o de producao: as primeiras entradas do log real de 24/08 eram
 # deste teste ("texto (2 ch): oi", "rede caiu"), e elas atrapalham quem for diagnosticar
 # um problema de verdade.
@@ -78,7 +89,7 @@ original_urlopen = tr.urllib.request.urlopen
 tr.urllib.request.urlopen = responder_429
 zerar()
 check("comeca sem pausa", tr.em_pausa() == 0)
-check("429 devolve None (a frase segue pendente)", tr.traduzir("oi", "pt") is None)
+check("429 devolve None (a frase segue pendente)", tr.traduzir(FRASE, "pt") is None)
 check("entra em pausa depois do 429", tr.em_pausa() > tr.RECUO_INICIAL - 1,
       round(tr.em_pausa(), 1))
 check("o recuo da porta gtx dobra para a proxima vez",
@@ -100,7 +111,7 @@ plano_b_chamado = {"n": 0}
 original_plano_b = tr.traduzir_plano_b
 tr.traduzir_plano_b = lambda *a, **k: (plano_b_chamado.__setitem__("n", plano_b_chamado["n"] + 1), None)[1]
 for _ in range(30):
-    tr.traduzir("oi", "pt")
+    tr.traduzir(FRASE, "pt")
 check("em pausa nenhuma chamada ao Google e feita", chamadas["n"] == 0, chamadas["n"])
 check("mas o plano B e tentado", plano_b_chamado["n"] == 30, plano_b_chamado["n"])
 tr.traduzir_plano_b = original_plano_b
@@ -108,7 +119,7 @@ tr.traduzir_plano_b = original_plano_b
 # ── 3. O recuo tem teto — nao vira espera eterna ───────────────────────────────
 tr.urllib.request.urlopen = responder_429
 zerar(recuo=tr.RECUO_MAXIMO)
-tr.traduzir("oi", "pt")
+tr.traduzir(FRASE, "pt")
 check("o recuo nao passa do teto",
       all(tr._ritmo["recuo"][c] == tr.RECUO_MAXIMO for c in tr.GTX_CLIENTES),
       tr._ritmo["recuo"])
@@ -119,7 +130,7 @@ check("e a pausa nunca passa do teto", tr.em_pausa() <= tr.RECUO_MAXIMO + 1,
 tr.urllib.request.urlopen = lambda *a, **k: RespostaFalsa(
     b'[[["ola","hi",null,null,10]],null,"en"]')
 zerar(recuo=80.0)
-check("traducao normal funciona", tr.traduzir("hi", "pt") == "ola")
+check("traducao normal funciona", tr.traduzir(FRASE, "pt") == "ola")
 check("sucesso zera o recuo da porta usada",
       tr._ritmo["recuo"]["gtx"] == tr.RECUO_INICIAL, tr._ritmo["recuo"]["gtx"])
 
@@ -127,7 +138,7 @@ check("sucesso zera o recuo da porta usada",
 tr.urllib.request.urlopen = lambda *a, **k: RespostaFalsa(
     b'[[["bom ","good ",null,null,0],["dia","morning",null,null,0]],null,"en"]')
 zerar()
-check("junta os pedacos de uma frase longa", tr.traduzir("good morning", "pt") == "bom dia")
+check("junta os pedacos de uma frase longa", tr.traduzir(FRASE_LONGA, "pt") == "bom dia")
 
 # ── 5. Intervalo minimo entre chamadas, para nao criar rajada ──────────────────
 tr.urllib.request.urlopen = lambda *a, **k: RespostaFalsa(
@@ -135,7 +146,7 @@ tr.urllib.request.urlopen = lambda *a, **k: RespostaFalsa(
 zerar()
 inicio = time.time()
 for _ in range(3):
-    tr.traduzir("hi", "pt")
+    tr.traduzir(FRASE, "pt")
 gasto = time.time() - inicio
 check("tres chamadas respeitam o intervalo minimo",
       gasto >= 2 * tr.INTERVALO_MIN_CHAMADA * 0.9, round(gasto, 2))
@@ -146,17 +157,17 @@ check("o intervalo e menor que o poll, para nao atrasar a traducao",
 zerar()
 tr.urllib.request.urlopen = lambda *a, **k: (_ for _ in ()).throw(
     urllib.error.HTTPError("u", 500, "x", None, None))
-tr.traduzir("oi", "pt")
+tr.traduzir(FRASE, "pt")
 check("erro 500 nao abre pausa", tr.em_pausa() == 0)
 
 zerar()
 tr.urllib.request.urlopen = lambda *a, **k: (_ for _ in ()).throw(OSError("rede caiu"))
-check("queda de rede devolve None sem explodir", tr.traduzir("oi", "pt") is None)
+check("queda de rede devolve None sem explodir", tr.traduzir(FRASE, "pt") is None)
 check("queda de rede nao abre pausa", tr.em_pausa() == 0)
 
 zerar()
 tr.urllib.request.urlopen = lambda *a, **k: RespostaFalsa(b"nao e json")
-check("resposta invalida devolve None sem explodir", tr.traduzir("oi", "pt") is None)
+check("resposta invalida devolve None sem explodir", tr.traduzir(FRASE, "pt") is None)
 
 tr.urllib.request.urlopen = original_urlopen
 
@@ -182,7 +193,7 @@ def por_porta(*a, **k):
 
 zerar()
 tr.urllib.request.urlopen = por_porta
-r = tr.traduzir("hi", "pt")
+r = tr.traduzir(FRASE, "pt")
 check("com gtx bloqueada, a traducao sai por outra porta", r == "ola", r)
 check("e ela tentou gtx antes", usadas and usadas[0] == "gtx", usadas)
 check("caindo na porta seguinte da lista",
@@ -201,7 +212,7 @@ chamou_b = {"n": 0}
 orig_b = tr.traduzir_plano_b
 tr.traduzir_plano_b = lambda *a, **k: (chamou_b.__setitem__("n", 1), "pelo plano B")[1]
 usadas.clear()
-r = tr.traduzir("hi", "pt")
+r = tr.traduzir(FRASE, "pt")
 check("todas bloqueadas -> plano B", r == "pelo plano B" and chamou_b["n"] == 1, r)
 check("e nenhuma porta do Google foi tocada", usadas == [], usadas)
 check("em_pausa vira verdadeiro so ai", tr.em_pausa() > 0, round(tr.em_pausa(), 1))
