@@ -1,6 +1,23 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
+PudimTranslate - tradutor de chat.
+
+DUAS IMPLEMENTACOES, UMA REGRA
+------------------------------
+Este arquivo tem um gemeo em PowerShell: pudimtr_comum.ps1 + PudimTradutor.ps1.
+Os dois fazem a mesma coisa, e PudimTradutor.bat escolhe qual rodar — no Windows
+prefere o PowerShell, que vem de fabrica; no Linux e no macOS prefere este.
+
+TODA CORRECAO DE COMPORTAMENTO PRECISA ENTRAR NOS DOIS.
+
+Isso nao e zelo: em 24/08 o tratamento do 429 foi escrito so aqui, o jogador
+roda a versao PowerShell, e para ele nada mudou. A pista era sutil, porque a
+mensagem de erro vinha no formato do .NET e em portugues, nao no do urllib.
+
+tools/test_paridade.py compara os dois e falha quando um fica para tras. Rode-o
+depois de mexer em qualquer um dos lados.
+
 PudimTranslate — Tradutor de chat (programa auxiliar)
 
 ATENCAO: existe uma segunda implementacao, em PowerShell (pudimtr_comum.ps1 e

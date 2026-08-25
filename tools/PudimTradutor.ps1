@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     PudimTranslate — tradutor de chat do 0 A.D.
 
@@ -165,6 +165,20 @@ try {
         # pedido nao diz nada.
         $destino = ConvertTo-PudimIdioma -Codigo $pedido.to
         if (-not $destino) { $destino = $To }
+
+        # Em pausa por 429 nao ha o que fazer com os pedidos: sair daqui evita
+        # imprimir a mesma frase dezenas de vezes e mantem o sinal de vida em dia.
+        $pausa = Get-PudimPausa
+        if ($pausa -gt 0) {
+            if (((Get-Date) - $ultimoSinal).TotalSeconds -ge 5) {
+                Write-PudimResposta -Caminho $caminhoResposta -Respostas $respostas `
+                                    -Vivo (Get-PudimAgora)
+                $ultimoSinal = Get-Date
+                Write-Host "  . aguardando o limite do Google passar ($([int]$pausa)s)"
+            }
+            Start-Sleep -Milliseconds 300
+            continue
+        }
 
         $novidade = $false
         foreach ($item in @($pedido.items)) {

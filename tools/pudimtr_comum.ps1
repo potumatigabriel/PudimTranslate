@@ -1,4 +1,4 @@
-# PudimTranslate — funcoes compartilhadas pelo tradutor e pelo lancador.
+﻿# PudimTranslate — funcoes compartilhadas pelo tradutor e pelo lancador.
 #
 # ATENCAO: existe uma segunda implementacao, em Python (pudim_tradutor.py e
 # jogar_0ad.py). Nao e duplicacao por descuido — e o que faz o mod funcionar sem
@@ -22,6 +22,21 @@
 # Este arquivo nao faz nada sozinho — e carregado com dot-source pelos outros:
 #     . "$PSScriptRoot\pudimtr_comum.ps1"
 
+# DUAS IMPLEMENTACOES, UMA REGRA
+# ------------------------------
+# Este arquivo tem um gemeo em Python: pudim_tradutor.py. Os dois fazem a mesma
+# coisa, e PudimTradutor.bat escolhe qual rodar — no Windows prefere este, que
+# vem de fabrica; no Linux e no macOS prefere o Python.
+#
+# TODA CORRECAO DE COMPORTAMENTO PRECISA ENTRAR NOS DOIS.
+#
+# Isso nao e zelo: em 24/08 o tratamento do 429 foi escrito so no lado Python, o
+# jogador roda este, e para ele nada mudou. A pista era sutil, porque a mensagem
+# de erro vinha no formato do .NET e em portugues, nao no do urllib.
+#
+# tools/test_paridade.py compara os dois e falha quando um fica para tras. Rode-o
+# depois de mexer em qualquer um dos lados.
+
 # ─── Protocolo da ponte ───────────────────────────────────────────────────────
 # Os arquivos ficam em <userdata>\saves\campaigns\. A pasta nao foi escolhida
 # por gosto: o ReadJSONFile/WriteJSONFile da GUI do jogo so aceita uma lista
@@ -43,6 +58,20 @@ $script:ArqCache  = "pudim_tr_cache.json"
 $script:TamanhoResposta = 65536
 
 $script:UrlGtx = "https://translate.googleapis.com/translate_a/single"
+
+# O endpoint gtx e gratuito e limita por IP: responde 429 quando acha que foi
+# pedido demais. Sem tratar isso, a frase continuava pendente, o laco a
+# reencontrava a cada volta e tentava de novo — o que MANTEM o bloqueio de pe em
+# vez de esperar ele passar. Foi o que travou o tradutor em 24/08.
+#
+# Duas travas: intervalo minimo entre chamadas, para nao criar rajada, e recuo
+# que dobra a cada 429, para dar tempo do bloqueio expirar.
+$script:IntervaloMinChamada = 0.35
+$script:RecuoInicial = 5
+$script:RecuoMaximo  = 300
+$script:UltimaChamada = [datetime]::MinValue
+$script:BloqueadoAte  = [datetime]::MinValue
+$script:Recuo = 5
 $script:NomeAtalho = "0 A.D. Translator.lnk"
 
 # UTF-8 sem BOM. O jogo le os arquivos como UTF-8 puro; um BOM na frente
@@ -384,6 +413,45 @@ function Write-PudimBytesAtomico
 }
 
 
+function Write-PudimBytesNoLugar
+{
+    <#
+    .DESCRIPTION
+        Reescreve o arquivo por cima, SEM trocar a entrada de diretorio.
+
+        Move-Item -Force evita leitura pela metade, mas troca a entrada de
+        diretorio. O VFS do 0 A.D. guarda a entrada de quando indexou a pasta, e
+        depois da troca ela aponta para um arquivo que nao existe mais: o jogo
+        imprime "CVFSFile: file ... couldn't be opened (vfs_load: -110300)" em
+        vermelho por cima da tela, mesmo com o arquivo ali no disco.
+
+        Como a resposta tem sempre o mesmo tamanho (TamanhoResposta, completado
+        com espacos), da para reescrever por cima. Em troca a leitura pode pegar
+        o arquivo no meio da escrita, e isso o lado do jogo ja trata em silencio.
+
+        Arquivo inexistente ou com outro tamanho cai no Move-Item: ai a entrada
+        precisa mesmo ser criada ou corrigida.
+    #>
+    param([string] $Caminho, [byte[]] $Bytes)
+
+    try {
+        $info = Get-Item -LiteralPath $Caminho -ErrorAction Stop
+        if ($info.Length -ne $Bytes.Length) {
+            Write-PudimBytesAtomico -Caminho $Caminho -Bytes $Bytes
+            return
+        }
+        $fs = [IO.File]::Open($Caminho, "Open", "Write", "ReadWrite")
+        try {
+            $fs.Position = 0
+            $fs.Write($Bytes, 0, $Bytes.Length)
+            $fs.Flush($true)
+        } finally { $fs.Dispose() }
+    } catch {
+        Write-PudimBytesAtomico -Caminho $Caminho -Bytes $Bytes
+    }
+}
+
+
 function Write-PudimResposta
 {
     <#
@@ -429,7 +497,7 @@ function Write-PudimResposta
     [Array]::Copy($bytes, $saida, $bytes.Length)
     for ($i = $bytes.Length; $i -lt $script:TamanhoResposta; $i++) { $saida[$i] = 0x20 }
 
-    Write-PudimBytesAtomico -Caminho $Caminho -Bytes $saida
+    Write-PudimBytesNoLugar -Caminho $Caminho -Bytes $saida
 }
 
 
@@ -461,6 +529,18 @@ function ConvertTo-PudimIdioma
 }
 
 
+function Get-PudimPausa
+{
+    <#
+    .SYNOPSIS
+        Segundos que ainda faltam do recuo por 429; 0 quando pode chamar.
+    #>
+    $falta = ($script:BloqueadoAte - (Get-Date)).TotalSeconds
+    if ($falta -lt 0) { return 0 }
+    return $falta
+}
+
+
 function Invoke-PudimTraducao
 {
     <#
@@ -478,6 +558,14 @@ function Invoke-PudimTraducao
     #>
     param([string] $Texto, [string] $Destino, [string] $Origem = "auto")
 
+    if ((Get-PudimPausa) -gt 0) { return $null }
+
+    $desde = ((Get-Date) - $script:UltimaChamada).TotalSeconds
+    if ($desde -lt $script:IntervaloMinChamada) {
+        Start-Sleep -Milliseconds ([int](($script:IntervaloMinChamada - $desde) * 1000))
+    }
+    $script:UltimaChamada = Get-Date
+
     $url = "$($script:UrlGtx)?client=gtx&sl=$Origem&tl=$Destino&dt=t&q=" + [uri]::EscapeDataString($Texto)
 
     try {
@@ -485,9 +573,24 @@ function Invoke-PudimTraducao
             "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
         }
     } catch {
-        Write-Host "  ! falha ao traduzir: $($_.Exception.Message)"
+        # O 429 chega como WebException; o codigo esta em Response.StatusCode.
+        # Comparar pelo texto da mensagem nao serve: ela vem traduzida para o
+        # idioma do Windows ("O servidor remoto retornou um erro: (429) ...").
+        $codigo = 0
+        try { $codigo = [int] $_.Exception.Response.StatusCode } catch { }
+        if ($codigo -eq 429) {
+            $script:BloqueadoAte = (Get-Date).AddSeconds($script:Recuo)
+            Write-Host "  ! Google limitou o ritmo (429). Pausando $([int]$script:Recuo)s."
+            # Dobra ate o teto: se o bloqueio for longo, insistir so o prolonga.
+            $script:Recuo = [Math]::Min($script:RecuoMaximo, $script:Recuo * 2)
+        } else {
+            Write-Host "  ! falha ao traduzir: $($_.Exception.Message)"
+        }
         return $null
     }
+
+    # Deu certo: o bloqueio passou, entao o proximo 429 recua do inicio.
+    $script:Recuo = $script:RecuoInicial
 
     try {
         $partes = $resposta[0] | ForEach-Object { $_[0] }
