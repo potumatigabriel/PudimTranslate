@@ -90,8 +90,22 @@ tr.urllib.request.urlopen = responder_429
 zerar()
 check("comeca sem pausa", tr.em_pausa() == 0)
 check("429 devolve None (a frase segue pendente)", tr.traduzir(FRASE, "pt") is None)
-check("entra em pausa depois do 429", tr.em_pausa() > tr.RECUO_INICIAL - 1,
-      round(tr.em_pausa(), 1))
+# A tolerancia tem de descontar o tempo que a PROPRIA tentativa gasta.
+#
+# em_pausa() e min(bloqueado_ate) - agora, e com a rotacao de portas as tres levam 429 em
+# sequencia, cada uma esperando INTERVALO_MIN_CHAMADA. A ultima bloqueia ~0,7s depois da
+# primeira, entao a pausa ja nasce em ~4,3 e nao em 5.
+#
+# A assercao antiga exigia > 4 e passava por pouco; ela ficou instavel desde a rotacao e so
+# apareceu quando o dicionario acrescentou alguns milissegundos na frente. Uma rodada em
+# cinco dava 3,9. Descontar os dois intervalos deixa o teste medindo o que ele quer medir —
+# que a pausa ABRIU — em vez de medir a velocidade da maquina.
+MARGEM_RITMO = 2 * tr.INTERVALO_MIN_CHAMADA + 0.5
+check("entra em pausa depois do 429",
+      tr.em_pausa() > tr.RECUO_INICIAL - MARGEM_RITMO,
+      "%.1fs, minimo %.1f" % (tr.em_pausa(), tr.RECUO_INICIAL - MARGEM_RITMO))
+check("e a pausa aberta e a do recuo, nao um valor qualquer",
+      tr.em_pausa() <= tr.RECUO_INICIAL, round(tr.em_pausa(), 1))
 check("o recuo da porta gtx dobra para a proxima vez",
       tr._ritmo["recuo"]["gtx"] == 2 * tr.RECUO_INICIAL, tr._ritmo["recuo"]["gtx"])
 
