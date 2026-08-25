@@ -74,8 +74,12 @@ comportamentos = [
      r"\[Math\]::Min\(\$script:RecuoMaximo,\s*\$script:Recuo\s*\*\s*2\)"),
     ("sucesso zera o recuo",
      r"_ritmo\[.recuo.\]\s*=\s*RECUO_INICIAL", r"\$script:Recuo\s*=\s*\$script:RecuoInicial"),
-    ("nao chama a rede durante a pausa",
-     r"if em_pausa\(\):\s*\n\s*return None", r"if \(\(Get-PudimPausa\) -gt 0\) \{ return \$null \}"),
+    # Durante a pausa nao se toca no GOOGLE. O plano B pode ser chamado — e o
+    # motivo de ele existir — entao a propriedade certa e que a checagem de pausa
+    # venha ANTES de montar a URL do gtx, e que a funcao retorne ali.
+    ("a pausa e checada antes de montar a chamada ao Google",
+     r"if em_pausa\(\):[\s\S]{0,200}?return alternativa[\s\S]{0,600}?GTX_URL",
+     r"if \(\(Get-PudimPausa\) -gt 0\) \{[\s\S]{0,300}?return \$alternativa[\s\S]{0,600}?\$script:UrlGtx"),
     ("respeita o intervalo minimo antes de chamar",
      r"INTERVALO_MIN_CHAMADA - \(time\.time\(\)", r"\$desde -lt \$script:IntervaloMinChamada"),
     ("reescreve a resposta no lugar, sem trocar a entrada de diretorio",
@@ -108,10 +112,34 @@ check("nenhum dos dois compara o texto do erro",
       "Too Many Requests" not in sem_comentario(PY, "#") and
       "Too Many Requests" not in sem_comentario(PS, "#"))
 
+# ── 4b. Plano B e log: adicionados em 24/08, tem de existir nos dois ───────────
+extras = [
+    ("plano B pela MyMemory",
+     r"MYMEMORY_URL\s*=", r"\$script:UrlMyMemory\s*="),
+    ("plano B so aceita traducao de MAQUINA (created-by MT!)",
+     r'created-by"\)\) == "MT!"', r'"created-by" -eq "MT!"'),
+    ("o plano B entra quando o Google esta em recuo",
+     r"if em_pausa\(\):[\s\S]{0,40}?alternativa = traduzir_plano_b",
+     r"if \(\(Get-PudimPausa\) -gt 0\) \{[\s\S]{0,60}?\$alternativa = Invoke-PudimPlanoB"),
+    ("log de erros com corte nas ultimas linhas",
+     r"LOG_MAX_LINHAS\s*=\s*500", r"\$script:LogMaxLinhas\s*=\s*500"),
+    ("o 429 vai para o log, com o tamanho do texto",
+     r'registrar\("429 do Google', r'Write-PudimLog \("429 do Google'),
+    ("o log nunca derruba o tradutor",
+     r"except Exception:[\s\S]{0,20}?pass", r"\} catch \{ \}"),
+]
+for rot, rpy, rps in extras:
+    tpy, tps = bool(re.search(rpy, PY)), bool(re.search(rps, PS))
+    check(rot, tpy and tps, "py=%s ps=%s" % (tpy, tps))
+
+check("o limite de 500 linhas e o mesmo nos dois",
+      re.search(r"LOG_MAX_LINHAS\s*=\s*(\d+)", PY).group(1) ==
+      re.search(r"\$script:LogMaxLinhas\s*=\s*(\d+)", PS).group(1))
+
 # ── 5. Os dois falam a mesma coisa na tela ─────────────────────────────────────
 # O jogador le a janela do tradutor; a mensagem nao pode depender de qual
 # implementacao a maquina escolheu.
-for frase in ("Google limitou o ritmo", "aguardando o limite do Google passar"):
+for frase in ("Google limitou o ritmo", "aguardando o limite do Google passar", "(plano B)"):
     npy = PY.count(frase)
     nps = PS.count(frase) + PS_LOOP.count(frase)
     check('a frase "%s" existe nos dois' % frase[:34], npy >= 1 and nps >= 1,

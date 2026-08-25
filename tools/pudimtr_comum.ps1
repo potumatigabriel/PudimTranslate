@@ -59,6 +59,22 @@ $script:TamanhoResposta = 65536
 
 $script:UrlGtx = "https://translate.googleapis.com/translate_a/single"
 
+# Plano B, quando o Google esta bloqueando. Nao exige chave nem cadastro.
+#
+# A MyMemory devolve a melhor correspondencia da MEMORIA DE TRADUCAO dela, que
+# nem sempre e uma traducao: para "good morning friend" o melhor resultado, com
+# 0,98 de pontuacao, e "bom dia amigo. O ginasio ja espera por ti" — alguem
+# gravou esse segmento um dia. Por isso so aceitamos entradas marcadas com
+# created-by "MT!", que sao as de traducao automatica. Sem MT!, devolvemos nada:
+# nao traduzir e melhor que mostrar bobagem com cara de traducao.
+$script:UrlMyMemory = "https://api.mymemory.translated.net/get"
+
+# Log de erros, ao lado do proprio tradutor. Guarda as ultimas 500 linhas e
+# descarta o comeco. So erro e evento raro entram aqui; a traducao de cada frase
+# continua indo para a janela, senao o que importa fica afogado.
+$script:LogArquivo = Join-Path $PSScriptRoot "pudim_tr_log.txt"
+$script:LogMaxLinhas = 500
+
 # O endpoint gtx e gratuito e limita por IP: responde 429 quando acha que foi
 # pedido demais. Sem tratar isso, a frase continuava pendente, o laco a
 # reencontrava a cada volta e tentava de novo — o que MANTEM o bloqueio de pe em
@@ -529,6 +545,60 @@ function ConvertTo-PudimIdioma
 }
 
 
+function Write-PudimLog
+{
+    <#
+    .DESCRIPTION
+        Escreve uma linha no log, mantendo so as ultimas LogMaxLinhas.
+
+        Reescreve o arquivo a cada chamada. Seria caro num log de alto volume;
+        aqui sao erros, que sao raros, e em troca o corte fica simples e o
+        arquivo nunca passa do tamanho combinado.
+
+        Nunca deixa o log derrubar o tradutor: falhou, segue o jogo.
+    #>
+    param([string] $Mensagem)
+
+    $linha = "{0}  {1}" -f (Get-Date -Format "yyyy-MM-dd HH:mm:ss"), $Mensagem
+    try {
+        $antigas = @()
+        if (Test-Path -LiteralPath $script:LogArquivo) {
+            $antigas = @(Get-Content -LiteralPath $script:LogArquivo -ErrorAction Stop)
+        }
+        $antigas += $linha
+        if ($antigas.Count -gt $script:LogMaxLinhas) {
+            $antigas = $antigas[($antigas.Count - $script:LogMaxLinhas)..($antigas.Count - 1)]
+        }
+        Set-Content -LiteralPath $script:LogArquivo -Value $antigas -Encoding UTF8
+    } catch { }
+}
+
+
+function Invoke-PudimPlanoB
+{
+    <#
+    .DESCRIPTION
+        Traducao pela MyMemory. Devolve $null quando nao ha resultado de MAQUINA.
+        Ver UrlMyMemory para o porque de exigir created-by igual a "MT!".
+    #>
+    param([string] $Texto, [string] $Destino, [string] $Origem = "auto")
+
+    $de = if ($Origem -eq "auto") { "en" } else { $Origem }
+    $url = "$($script:UrlMyMemory)?q=" + [uri]::EscapeDataString($Texto) + "&langpair=$de|$Destino"
+    try {
+        $r = Invoke-RestMethod -Uri $url -UseBasicParsing -TimeoutSec 10 -Headers @{
+            "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        }
+    } catch {
+        return $null
+    }
+    foreach ($m in @($r.matches)) {
+        if ([string]$m."created-by" -eq "MT!" -and $m.translation) { return [string]$m.translation }
+    }
+    return $null
+}
+
+
 function Get-PudimPausa
 {
     <#
@@ -558,7 +628,13 @@ function Invoke-PudimTraducao
     #>
     param([string] $Texto, [string] $Destino, [string] $Origem = "auto")
 
-    if ((Get-PudimPausa) -gt 0) { return $null }
+    # Google em recuo: tenta o plano B em vez de simplesmente falhar. Se ele
+    # tambem nao resolver, a frase continua pendente e volta no proximo ciclo.
+    if ((Get-PudimPausa) -gt 0) {
+        $alternativa = Invoke-PudimPlanoB -Texto $Texto -Destino $Destino -Origem $Origem
+        if ($alternativa) { Write-Host "  (plano B) $alternativa" }
+        return $alternativa
+    }
 
     $desde = ((Get-Date) - $script:UltimaChamada).TotalSeconds
     if ($desde -lt $script:IntervaloMinChamada) {
@@ -581,10 +657,13 @@ function Invoke-PudimTraducao
         if ($codigo -eq 429) {
             $script:BloqueadoAte = (Get-Date).AddSeconds($script:Recuo)
             Write-Host "  ! Google limitou o ritmo (429). Pausando $([int]$script:Recuo)s."
+            Write-PudimLog ("429 do Google; pausando {0}s; texto ({1} ch): {2}" -f `
+                [int]$script:Recuo, $Texto.Length, $Texto.Substring(0, [Math]::Min(80, $Texto.Length)))
             # Dobra ate o teto: se o bloqueio for longo, insistir so o prolonga.
             $script:Recuo = [Math]::Min($script:RecuoMaximo, $script:Recuo * 2)
         } else {
             Write-Host "  ! falha ao traduzir: $($_.Exception.Message)"
+            Write-PudimLog ("falha ao traduzir (HTTP {0}): {1}" -f $codigo, $_.Exception.Message)
         }
         return $null
     }

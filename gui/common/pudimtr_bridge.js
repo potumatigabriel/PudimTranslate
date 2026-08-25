@@ -249,10 +249,29 @@ function pudim_TrObter(texto)
  * @returns a tradução, se já estiver em cache — nesse caso nada é pedido.
  *          Senão null, e a resposta chega depois pelos ouvintes.
  */
+/**
+ * Acima disto o texto nao e fala de chat.
+ *
+ * Em 24/08 a ponte pediu traducao da mensagem do dia do lobby INTEIRA — varios
+ * paragrafos, com regras, links e telefones de contato. O endpoint gtx recebe o
+ * texto na URL; um bloco desses estoura qualquer limite razoavel e foi o que
+ * abriu o bloqueio de 429 logo na entrada do lobby, sem ninguem ter conversado.
+ *
+ * 400 caracteres cobrem com folga qualquer frase que alguem digita numa partida
+ * e mantem a URL codificada bem abaixo do limite pratico de 2000.
+ */
+const PUDIM_TR_MAX_TEXTO = 400;
+
 function pudim_TrPedir(texto)
 {
 	const limpo = pudim_TrLimpar(texto);
 	if (!limpo)
+		return null;
+
+	// Bloco grande demais para ser fala: aviso do sistema, regras do lobby, texto
+	// colado. Traduzir isso nao serve para nada e derruba o tradutor para todo o
+	// resto da sessao.
+	if (limpo.length > PUDIM_TR_MAX_TEXTO)
 		return null;
 
 	const id = pudim_TrId(limpo);

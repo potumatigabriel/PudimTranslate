@@ -64,6 +64,8 @@ class RespostaFalsa:
 print("ritmo das chamadas ao Google")
 
 original_urlopen = tr.urllib.request.urlopen
+# O plano B usa a mesma urlopen, entao os stubs abaixo ja o cobrem; onde ele
+# atrapalharia a medicao, e trocado por um duble explicito.
 
 # ── 1. O primeiro 429 abre a pausa ─────────────────────────────────────────────
 tr.urllib.request.urlopen = responder_429
@@ -75,7 +77,9 @@ check("entra em pausa depois do 429", tr.em_pausa() > tr.RECUO_INICIAL - 1,
 check("o recuo dobra para a proxima vez", tr._ritmo["recuo"] == 2 * tr.RECUO_INICIAL,
       tr._ritmo["recuo"])
 
-# ── 2. O ponto do bug: durante a pausa nao se toca na rede ─────────────────────
+# ── 2. O ponto do bug: durante a pausa nao se toca no GOOGLE ───────────────────
+# O plano B PODE ser chamado — e o motivo de existir. O que nao pode e insistir
+# no endpoint que acabou de dizer "devagar", que era o que sustentava o bloqueio.
 chamadas = {"n": 0}
 
 
@@ -85,9 +89,14 @@ def contar(*a, **k):
 
 
 tr.urllib.request.urlopen = contar
+plano_b_chamado = {"n": 0}
+original_plano_b = tr.traduzir_plano_b
+tr.traduzir_plano_b = lambda *a, **k: (plano_b_chamado.__setitem__("n", plano_b_chamado["n"] + 1), None)[1]
 for _ in range(30):
     tr.traduzir("oi", "pt")
-check("em pausa nenhuma chamada de rede e feita", chamadas["n"] == 0, chamadas["n"])
+check("em pausa nenhuma chamada ao Google e feita", chamadas["n"] == 0, chamadas["n"])
+check("mas o plano B e tentado", plano_b_chamado["n"] == 30, plano_b_chamado["n"])
+tr.traduzir_plano_b = original_plano_b
 
 # ── 3. O recuo tem teto — nao vira espera eterna ───────────────────────────────
 tr.urllib.request.urlopen = responder_429

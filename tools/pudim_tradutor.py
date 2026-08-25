@@ -104,6 +104,26 @@ CACHE_MAX = 4000
 TAMANHO_RESPOSTA = 65536
 
 GTX_URL = "https://translate.googleapis.com/translate_a/single"
+
+# Plano B, quando o Google esta bloqueando. Nao exige chave nem cadastro.
+#
+# A MyMemory devolve a melhor correspondencia da MEMORIA DE TRADUCAO dela, que
+# nem sempre e uma traducao: para "good morning friend" o melhor resultado, com
+# 0,98 de pontuacao, e "bom dia amigo. O ginasio ja espera por ti" — alguem
+# gravou esse segmento um dia. Por isso so aceitamos entradas marcadas com
+# created-by "MT!", que sao as de traducao automatica. Sem MT!, devolvemos nada:
+# nao traduzir e melhor que mostrar bobagem com cara de traducao.
+MYMEMORY_URL = "https://api.mymemory.translated.net/get"
+
+# Log de erros, ao lado do proprio tradutor. Guarda as ultimas LOG_MAX_LINHAS e
+# descarta o comeco — um arquivo que cresce sozinho a partida inteira ninguem le,
+# e um que so tem a ultima linha nao serve para achar padrao.
+#
+# So erro e evento raro entram aqui. A traducao de cada frase continua indo para
+# a janela e nao para o arquivo: sao centenas por partida e afogariam o que
+# importa.
+LOG_ARQUIVO = os.path.join(os.path.dirname(os.path.abspath(__file__)), "pudim_tr_log.txt")
+LOG_MAX_LINHAS = 500
 USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
 HTTP_TIMEOUT = 8
 
@@ -212,6 +232,26 @@ def em_pausa():
     return max(0.0, _ritmo["bloqueado_ate"] - time.time())
 
 
+def traduzir_plano_b(texto, destino, origem="auto"):
+    """
+    Traducao pela MyMemory. Devolve None quando nao ha resultado de MAQUINA.
+
+    Ver MYMEMORY_URL para o porque de exigir created-by == "MT!".
+    """
+    par = "%s|%s" % ("en" if origem == "auto" else origem, destino)
+    url = "%s?%s" % (MYMEMORY_URL, urllib.parse.urlencode({"q": texto, "langpair": par}))
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
+        with urllib.request.urlopen(req, timeout=HTTP_TIMEOUT) as resposta:
+            dados = json.loads(resposta.read().decode("utf-8", "replace"))
+    except Exception:
+        return None
+    for m in (dados.get("matches") or []):
+        if str(m.get("created-by")) == "MT!" and m.get("translation"):
+            return m["translation"]
+    return None
+
+
 def traduzir(texto, destino, origem="auto"):
     """
     Devolve o texto traduzido, ou None se a chamada falhar.
@@ -223,8 +263,13 @@ def traduzir(texto, destino, origem="auto"):
     Respeita o recuo por 429 e o intervalo minimo entre chamadas — ver
     INTERVALO_MIN_CHAMADA.
     """
+    # Google em recuo: tenta o plano B em vez de simplesmente falhar. Se ele
+    # tambem nao resolver, a frase continua pendente e volta no proximo ciclo.
     if em_pausa():
-        return None
+        alternativa = traduzir_plano_b(texto, destino, origem)
+        if alternativa:
+            print("  (plano B) %s" % alternativa)
+        return alternativa
 
     espera = INTERVALO_MIN_CHAMADA - (time.time() - _ritmo["ultima_chamada"])
     if espera > 0:
@@ -249,13 +294,17 @@ def traduzir(texto, destino, origem="auto"):
         if erro.code == 429:
             _ritmo["bloqueado_ate"] = time.time() + _ritmo["recuo"]
             print(f"  ! Google limitou o ritmo (429). Pausando {int(_ritmo['recuo'])}s.")
+            registrar("429 do Google; pausando %ds; texto (%d ch): %s"
+                      % (int(_ritmo["recuo"]), len(texto), texto[:80]))
             # Dobra ate o teto: se o bloqueio for longo, insistir so o prolonga.
             _ritmo["recuo"] = min(RECUO_MAXIMO, _ritmo["recuo"] * 2)
         else:
             print(f"  ! falha ao traduzir: {erro}")
+            registrar("HTTP %s ao traduzir: %s" % (erro.code, str(erro)[:120]))
         return None
     except Exception as erro:
         print(f"  ! falha ao traduzir: {erro}")
+        registrar("falha ao traduzir: %s" % str(erro)[:160])
         return None
 
     # Deu certo: o bloqueio passou, entao o proximo 429 volta a recuar do inicio.
@@ -327,6 +376,29 @@ def ler_json(caminho, padrao):
             return json.load(arquivo)
     except Exception:
         return padrao
+
+
+def registrar(mensagem):
+    """
+    Escreve uma linha no log, mantendo so as ultimas LOG_MAX_LINHAS.
+
+    Reescreve o arquivo inteiro a cada chamada. Seria caro num log de alto
+    volume; aqui sao erros, que sao raros, e em troca o corte fica simples e o
+    arquivo nunca passa do tamanho combinado.
+
+    Nunca deixa o log derrubar o tradutor: se a escrita falhar, segue o jogo.
+    """
+    linha = "%s  %s" % (time.strftime("%Y-%m-%d %H:%M:%S"), mensagem)
+    try:
+        antigas = []
+        if os.path.exists(LOG_ARQUIVO):
+            with open(LOG_ARQUIVO, "r", encoding="utf-8", errors="replace") as arquivo:
+                antigas = arquivo.read().splitlines()
+        antigas.append(linha)
+        with open(LOG_ARQUIVO, "w", encoding="utf-8") as arquivo:
+            arquivo.write("\n".join(antigas[-LOG_MAX_LINHAS:]) + "\n")
+    except Exception:
+        pass
 
 
 def gravar_json_atomico(caminho, dados):
@@ -567,6 +639,7 @@ def main():
         except Exception as erro:
             # Um erro inesperado nao pode derrubar o tradutor no meio do jogo.
             print(f"  ! erro no laco principal: {erro}")
+            registrar("erro no laco principal: %s" % str(erro)[:160])
             time.sleep(1)
 
 
