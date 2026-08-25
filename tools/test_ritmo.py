@@ -35,11 +35,12 @@ def check(nome, cond, extra=None):
 
 
 def zerar(recuo=None):
-    tr._ritmo.update({
-        "ultima_chamada": 0.0,
-        "bloqueado_ate": 0.0,
-        "recuo": tr.RECUO_INICIAL if recuo is None else recuo,
-    })
+    """Todas as portas livres. O recuo agora e por porta — ver GTX_CLIENTES."""
+    r = tr.RECUO_INICIAL if recuo is None else recuo
+    tr._ritmo["ultima_chamada"] = 0.0
+    for c in tr.GTX_CLIENTES:
+        tr._ritmo["bloqueado_ate"][c] = 0.0
+        tr._ritmo["recuo"][c] = r
 
 
 def responder_429(*a, **k):
@@ -80,8 +81,8 @@ check("comeca sem pausa", tr.em_pausa() == 0)
 check("429 devolve None (a frase segue pendente)", tr.traduzir("oi", "pt") is None)
 check("entra em pausa depois do 429", tr.em_pausa() > tr.RECUO_INICIAL - 1,
       round(tr.em_pausa(), 1))
-check("o recuo dobra para a proxima vez", tr._ritmo["recuo"] == 2 * tr.RECUO_INICIAL,
-      tr._ritmo["recuo"])
+check("o recuo da porta gtx dobra para a proxima vez",
+      tr._ritmo["recuo"]["gtx"] == 2 * tr.RECUO_INICIAL, tr._ritmo["recuo"]["gtx"])
 
 # ── 2. O ponto do bug: durante a pausa nao se toca no GOOGLE ───────────────────
 # O plano B PODE ser chamado — e o motivo de existir. O que nao pode e insistir
@@ -108,7 +109,9 @@ tr.traduzir_plano_b = original_plano_b
 tr.urllib.request.urlopen = responder_429
 zerar(recuo=tr.RECUO_MAXIMO)
 tr.traduzir("oi", "pt")
-check("o recuo nao passa do teto", tr._ritmo["recuo"] == tr.RECUO_MAXIMO, tr._ritmo["recuo"])
+check("o recuo nao passa do teto",
+      all(tr._ritmo["recuo"][c] == tr.RECUO_MAXIMO for c in tr.GTX_CLIENTES),
+      tr._ritmo["recuo"])
 check("e a pausa nunca passa do teto", tr.em_pausa() <= tr.RECUO_MAXIMO + 1,
       round(tr.em_pausa(), 1))
 
@@ -117,7 +120,8 @@ tr.urllib.request.urlopen = lambda *a, **k: RespostaFalsa(
     b'[[["ola","hi",null,null,10]],null,"en"]')
 zerar(recuo=80.0)
 check("traducao normal funciona", tr.traduzir("hi", "pt") == "ola")
-check("sucesso zera o recuo", tr._ritmo["recuo"] == tr.RECUO_INICIAL, tr._ritmo["recuo"])
+check("sucesso zera o recuo da porta usada",
+      tr._ritmo["recuo"]["gtx"] == tr.RECUO_INICIAL, tr._ritmo["recuo"]["gtx"])
 
 # Frase longa volta quebrada em pedacos; juntar e o que da a frase inteira.
 tr.urllib.request.urlopen = lambda *a, **k: RespostaFalsa(
@@ -153,6 +157,55 @@ check("queda de rede nao abre pausa", tr.em_pausa() == 0)
 zerar()
 tr.urllib.request.urlopen = lambda *a, **k: RespostaFalsa(b"nao e json")
 check("resposta invalida devolve None sem explodir", tr.traduzir("oi", "pt") is None)
+
+tr.urllib.request.urlopen = original_urlopen
+
+# ── 7. Rotacao de portas: o achado de 24/08 ───────────────────────────────────
+# Medido na maquina do jogador: client=gtx respondia 429 a qualquer frase enquanto
+# client=at traduzia 8 de 8 no mesmo minuto. Sao portas do mesmo servico, com
+# contadores separados. A primeira reacao a um bloqueio e trocar de porta, nao
+# desistir do Google — o plano B tem qualidade pior e so entra no fim.
+print("\nrotacao entre as portas do Google")
+
+usadas = []
+
+
+def por_porta(*a, **k):
+    from urllib.parse import parse_qs, urlparse
+    url = a[0].full_url if hasattr(a[0], "full_url") else str(a[0])
+    cliente = parse_qs(urlparse(url).query).get("client", ["?"])[0]
+    usadas.append(cliente)
+    if cliente == "gtx":
+        raise urllib.error.HTTPError("u", 429, "x", None, None)
+    return RespostaFalsa(b'[[["ola","hi",null,null,10]],null,"en"]')
+
+
+zerar()
+tr.urllib.request.urlopen = por_porta
+r = tr.traduzir("hi", "pt")
+check("com gtx bloqueada, a traducao sai por outra porta", r == "ola", r)
+check("e ela tentou gtx antes", usadas and usadas[0] == "gtx", usadas)
+check("caindo na porta seguinte da lista",
+      len(usadas) > 1 and usadas[1] == tr.GTX_CLIENTES[1], usadas)
+check("so a porta que levou 429 fica bloqueada",
+      tr._ritmo["bloqueado_ate"]["gtx"] > time.time() and
+      tr._ritmo["bloqueado_ate"][tr.GTX_CLIENTES[1]] == 0.0)
+check("em_pausa e falso enquanto houver porta livre", tr.em_pausa() == 0)
+check("cliente_livre aponta a porta que funciona", tr.cliente_livre() == tr.GTX_CLIENTES[1])
+
+# Com TODAS bloqueadas, ai sim o plano B assume.
+zerar()
+for c in tr.GTX_CLIENTES:
+    tr._ritmo["bloqueado_ate"][c] = time.time() + 60
+chamou_b = {"n": 0}
+orig_b = tr.traduzir_plano_b
+tr.traduzir_plano_b = lambda *a, **k: (chamou_b.__setitem__("n", 1), "pelo plano B")[1]
+usadas.clear()
+r = tr.traduzir("hi", "pt")
+check("todas bloqueadas -> plano B", r == "pelo plano B" and chamou_b["n"] == 1, r)
+check("e nenhuma porta do Google foi tocada", usadas == [], usadas)
+check("em_pausa vira verdadeiro so ai", tr.em_pausa() > 0, round(tr.em_pausa(), 1))
+tr.traduzir_plano_b = orig_b
 
 tr.urllib.request.urlopen = original_urlopen
 

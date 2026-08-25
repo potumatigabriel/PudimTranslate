@@ -86,8 +86,23 @@ $script:IntervaloMinChamada = 0.35
 $script:RecuoInicial = 5
 $script:RecuoMaximo  = 300
 $script:UltimaChamada = [datetime]::MinValue
-$script:BloqueadoAte  = [datetime]::MinValue
-$script:Recuo = 5
+
+# O 429 nao e do Google inteiro: e do PARAMETRO client.
+#
+# Medido em 24/08, na mesma maquina e no mesmo minuto: client=gtx respondia 429 a
+# qualquer frase, enquanto client=at e client=dict-chrome-ex traduziam 8 de 8 sem
+# reclamar. Sao portas diferentes do mesmo servico, com contadores separados, e as
+# tres devolvem o MESMO formato de resposta.
+#
+# Entao a primeira reacao a um bloqueio nao e desistir do Google: e trocar de porta.
+# So com todas bloqueadas se recorre ao plano B, que tem qualidade pior.
+$script:GtxClientes = @("gtx", "at", "dict-chrome-ex")
+$script:BloqueadoAte = @{}
+$script:Recuo = @{}
+foreach ($c in $script:GtxClientes) {
+    $script:BloqueadoAte[$c] = [datetime]::MinValue
+    $script:Recuo[$c] = $script:RecuoInicial
+}
 $script:NomeAtalho = "0 A.D. Translator.lnk"
 
 # UTF-8 sem BOM. O jogo le os arquivos como UTF-8 puro; um BOM na frente
@@ -605,9 +620,29 @@ function Get-PudimPausa
     .SYNOPSIS
         Segundos que ainda faltam do recuo por 429; 0 quando pode chamar.
     #>
-    $falta = ($script:BloqueadoAte - (Get-Date)).TotalSeconds
+    $agora = Get-Date
+    foreach ($c in $script:GtxClientes) {
+        if ($script:BloqueadoAte[$c] -le $agora) { return 0 }
+    }
+    $proxima = ($script:GtxClientes | ForEach-Object { $script:BloqueadoAte[$_] } |
+                Sort-Object | Select-Object -First 1)
+    $falta = ($proxima - $agora).TotalSeconds
     if ($falta -lt 0) { return 0 }
     return $falta
+}
+
+
+function Get-PudimClienteLivre
+{
+    <#
+    .SYNOPSIS
+        Primeira porta do Google fora de recuo, ou $null se todas bloqueadas.
+    #>
+    $agora = Get-Date
+    foreach ($c in $script:GtxClientes) {
+        if ($script:BloqueadoAte[$c] -le $agora) { return $c }
+    }
+    return $null
 }
 
 
@@ -628,54 +663,58 @@ function Invoke-PudimTraducao
     #>
     param([string] $Texto, [string] $Destino, [string] $Origem = "auto")
 
-    # Google em recuo: tenta o plano B em vez de simplesmente falhar. Se ele
-    # tambem nao resolver, a frase continua pendente e volta no proximo ciclo.
-    if ((Get-PudimPausa) -gt 0) {
-        $alternativa = Invoke-PudimPlanoB -Texto $Texto -Destino $Destino -Origem $Origem
-        if ($alternativa) { Write-Host "  (plano B) $alternativa" }
-        return $alternativa
-    }
+    foreach ($cliente in $script:GtxClientes) {
+        if ($script:BloqueadoAte[$cliente] -gt (Get-Date)) { continue }
 
-    $desde = ((Get-Date) - $script:UltimaChamada).TotalSeconds
-    if ($desde -lt $script:IntervaloMinChamada) {
-        Start-Sleep -Milliseconds ([int](($script:IntervaloMinChamada - $desde) * 1000))
-    }
-    $script:UltimaChamada = Get-Date
-
-    $url = "$($script:UrlGtx)?client=gtx&sl=$Origem&tl=$Destino&dt=t&q=" + [uri]::EscapeDataString($Texto)
-
-    try {
-        $resposta = Invoke-RestMethod -Uri $url -UseBasicParsing -TimeoutSec 10 -Headers @{
-            "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+        $desde = ((Get-Date) - $script:UltimaChamada).TotalSeconds
+        if ($desde -lt $script:IntervaloMinChamada) {
+            Start-Sleep -Milliseconds ([int](($script:IntervaloMinChamada - $desde) * 1000))
         }
-    } catch {
-        # O 429 chega como WebException; o codigo esta em Response.StatusCode.
-        # Comparar pelo texto da mensagem nao serve: ela vem traduzida para o
-        # idioma do Windows ("O servidor remoto retornou um erro: (429) ...").
-        $codigo = 0
-        try { $codigo = [int] $_.Exception.Response.StatusCode } catch { }
-        if ($codigo -eq 429) {
-            $script:BloqueadoAte = (Get-Date).AddSeconds($script:Recuo)
-            Write-Host "  ! Google limitou o ritmo (429). Pausando $([int]$script:Recuo)s."
-            Write-PudimLog ("429 do Google; pausando {0}s; texto ({1} ch): {2}" -f `
-                [int]$script:Recuo, $Texto.Length, $Texto.Substring(0, [Math]::Min(80, $Texto.Length)))
-            # Dobra ate o teto: se o bloqueio for longo, insistir so o prolonga.
-            $script:Recuo = [Math]::Min($script:RecuoMaximo, $script:Recuo * 2)
-        } else {
+        $script:UltimaChamada = Get-Date
+
+        $url = "$($script:UrlGtx)?client=$cliente&sl=$Origem&tl=$Destino&dt=t&q=" + [uri]::EscapeDataString($Texto)
+
+        try {
+            $resposta = Invoke-RestMethod -Uri $url -UseBasicParsing -TimeoutSec 10 -Headers @{
+                "User-Agent" = "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
+            }
+        } catch {
+            # O 429 chega como WebException; o codigo esta em Response.StatusCode.
+            # Comparar pelo texto da mensagem nao serve: ela vem traduzida para o
+            # idioma do Windows ("O servidor remoto retornou um erro: (429) ...").
+            $codigo = 0
+            try { $codigo = [int] $_.Exception.Response.StatusCode } catch { }
+            if ($codigo -eq 429) {
+                $script:BloqueadoAte[$cliente] = (Get-Date).AddSeconds($script:Recuo[$cliente])
+                Write-Host ("  ! porta '{0}' limitada (429), pausando {1}s — tentando a proxima" -f `
+                            $cliente, [int]$script:Recuo[$cliente])
+                Write-PudimLog ("429 na porta {0}; pausando {1}s; texto ({2} ch): {3}" -f `
+                    $cliente, [int]$script:Recuo[$cliente], $Texto.Length,
+                    $Texto.Substring(0, [Math]::Min(80, $Texto.Length)))
+                $script:Recuo[$cliente] = [Math]::Min($script:RecuoMaximo, $script:Recuo[$cliente] * 2)
+                continue
+            }
             Write-Host "  ! falha ao traduzir: $($_.Exception.Message)"
-            Write-PudimLog ("falha ao traduzir (HTTP {0}): {1}" -f $codigo, $_.Exception.Message)
+            Write-PudimLog ("falha na porta {0} (HTTP {1}): {2}" -f $cliente, $codigo, $_.Exception.Message)
+            return $null
         }
-        return $null
+
+        # Deu certo: esta porta volta a recuar do inicio no proximo 429.
+        $script:Recuo[$cliente] = $script:RecuoInicial
+
+        try {
+            $partes = $resposta[0] | ForEach-Object { $_[0] }
+            return (-join $partes)
+        } catch {
+            Write-Host "  ! resposta em formato inesperado"
+            Write-PudimLog ("formato inesperado na porta {0}" -f $cliente)
+            return $null
+        }
     }
 
-    # Deu certo: o bloqueio passou, entao o proximo 429 recua do inicio.
-    $script:Recuo = $script:RecuoInicial
-
-    try {
-        $partes = $resposta[0] | ForEach-Object { $_[0] }
-        return (-join $partes)
-    } catch {
-        Write-Host "  ! resposta em formato inesperado"
-        return $null
-    }
+    # Todas as portas do Google em recuo: o plano B assume.
+    $alternativa = Invoke-PudimPlanoB -Texto $Texto -Destino $Destino -Origem $Origem
+    if ($alternativa) { Write-Host "  (plano B) $alternativa" }
+    return $alternativa
 }
+

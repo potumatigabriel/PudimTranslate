@@ -105,6 +105,18 @@ TAMANHO_RESPOSTA = 65536
 
 GTX_URL = "https://translate.googleapis.com/translate_a/single"
 
+# O 429 nao e do Google inteiro: e do PARAMETRO client.
+#
+# Medido em 24/08, na mesma maquina e no mesmo minuto: client=gtx respondia 429 a
+# qualquer frase, enquanto client=at e client=dict-chrome-ex traduziam 8 de 8 sem
+# reclamar. Sao portas diferentes do mesmo servico, com contadores separados, e as
+# tres devolvem o MESMO formato de resposta — o parser nao muda.
+#
+# Entao a primeira reacao a um bloqueio nao e desistir do Google: e trocar de
+# porta. So quando todas estiverem bloqueadas e que se recorre ao plano B, que
+# tem qualidade pior.
+GTX_CLIENTES = ("gtx", "at", "dict-chrome-ex")
+
 # Plano B, quando o Google esta bloqueando. Nao exige chave nem cadastro.
 #
 # A MyMemory devolve a melhor correspondencia da MEMORIA DE TRADUCAO dela, que
@@ -224,12 +236,26 @@ def achar_userdata(preferido=None):
 
 # Estado do controle de ritmo. Vive no modulo porque traduzir() e chamada de um
 # lugar so e guardar isso no chamador espalharia a regra por duas funcoes.
-_ritmo = {"ultima_chamada": 0.0, "bloqueado_ate": 0.0, "recuo": RECUO_INICIAL}
+# O recuo passa a ser POR CLIENTE: bloquear "gtx" nao pode calar "at".
+_ritmo = {"ultima_chamada": 0.0,
+          "bloqueado_ate": {c: 0.0 for c in GTX_CLIENTES},
+          "recuo": {c: RECUO_INICIAL for c in GTX_CLIENTES}}
+
+
+def cliente_livre():
+    """Primeiro cliente do Google fora de recuo, ou None se todos bloqueados."""
+    agora = time.time()
+    for c in GTX_CLIENTES:
+        if _ritmo["bloqueado_ate"][c] <= agora:
+            return c
+    return None
 
 
 def em_pausa():
-    """Segundos que ainda faltam do recuo por 429; 0 quando pode chamar."""
-    return max(0.0, _ritmo["bloqueado_ate"] - time.time())
+    """Segundos ate a primeira porta do Google reabrir; 0 quando alguma esta livre."""
+    if cliente_livre():
+        return 0.0
+    return max(0.0, min(_ritmo["bloqueado_ate"].values()) - time.time())
 
 
 def traduzir_plano_b(texto, destino, origem="auto"):
@@ -254,68 +280,77 @@ def traduzir_plano_b(texto, destino, origem="auto"):
 
 def traduzir(texto, destino, origem="auto"):
     """
-    Devolve o texto traduzido, ou None se a chamada falhar.
+    Devolve o texto traduzido, ou None se nenhuma porta responder.
 
-    A resposta do endpoint gtx e um array aninhado; o primeiro elemento e uma
-    lista de pedacos e o texto traduzido de cada pedaco e o indice 0. Juntar os
-    pedacos importa: frases longas voltam quebradas em varios deles.
+    Percorre as portas do Google (ver GTX_CLIENTES) e usa a primeira que nao
+    estiver em recuo. Um 429 bloqueia SO aquela porta e a tentativa segue na
+    proxima, no mesmo ciclo — foi isso que resolveu o bloqueio de 24/08, em que
+    gtx respondia 429 e at traduzia normalmente no mesmo minuto.
 
-    Respeita o recuo por 429 e o intervalo minimo entre chamadas — ver
-    INTERVALO_MIN_CHAMADA.
+    Com todas bloqueadas, cai no plano B.
+
+    A resposta do endpoint e um array aninhado; o primeiro elemento e uma lista
+    de pedacos e o texto traduzido de cada pedaco esta no indice 0. Juntar os
+    pedacos importa: frases longas voltam quebradas em varios deles. As tres
+    portas usam o mesmo formato.
     """
-    # Google em recuo: tenta o plano B em vez de simplesmente falhar. Se ele
-    # tambem nao resolver, a frase continua pendente e volta no proximo ciclo.
-    if em_pausa():
-        alternativa = traduzir_plano_b(texto, destino, origem)
-        if alternativa:
-            print("  (plano B) %s" % alternativa)
-        return alternativa
+    for cliente in GTX_CLIENTES:
+        if _ritmo["bloqueado_ate"][cliente] > time.time():
+            continue
 
-    espera = INTERVALO_MIN_CHAMADA - (time.time() - _ritmo["ultima_chamada"])
-    if espera > 0:
-        time.sleep(espera)
-    _ritmo["ultima_chamada"] = time.time()
-    parametros = urllib.parse.urlencode({
-        "client": "gtx",
-        "sl": origem,
-        "tl": destino,
-        "dt": "t",
-        "q": texto,
-    })
-    requisicao = urllib.request.Request(
-        f"{GTX_URL}?{parametros}",
-        headers={"User-Agent": USER_AGENT},
-    )
+        espera = INTERVALO_MIN_CHAMADA - (time.time() - _ritmo["ultima_chamada"])
+        if espera > 0:
+            time.sleep(espera)
+        _ritmo["ultima_chamada"] = time.time()
 
-    try:
-        with urllib.request.urlopen(requisicao, timeout=HTTP_TIMEOUT) as resposta:
-            dados = json.loads(resposta.read().decode("utf-8", "replace"))
-    except urllib.error.HTTPError as erro:
-        if erro.code == 429:
-            _ritmo["bloqueado_ate"] = time.time() + _ritmo["recuo"]
-            print(f"  ! Google limitou o ritmo (429). Pausando {int(_ritmo['recuo'])}s.")
-            registrar("429 do Google; pausando %ds; texto (%d ch): %s"
-                      % (int(_ritmo["recuo"]), len(texto), texto[:80]))
-            # Dobra ate o teto: se o bloqueio for longo, insistir so o prolonga.
-            _ritmo["recuo"] = min(RECUO_MAXIMO, _ritmo["recuo"] * 2)
-        else:
+        parametros = urllib.parse.urlencode({
+            "client": cliente,
+            "sl": origem,
+            "tl": destino,
+            "dt": "t",
+            "q": texto,
+        })
+        requisicao = urllib.request.Request(
+            f"{GTX_URL}?{parametros}",
+            headers={"User-Agent": USER_AGENT},
+        )
+
+        try:
+            with urllib.request.urlopen(requisicao, timeout=HTTP_TIMEOUT) as resposta:
+                dados = json.loads(resposta.read().decode("utf-8", "replace"))
+        except urllib.error.HTTPError as erro:
+            if erro.code == 429:
+                _ritmo["bloqueado_ate"][cliente] = time.time() + _ritmo["recuo"][cliente]
+                print(f"  ! porta '{cliente}' limitada (429), pausando "
+                      f"{int(_ritmo['recuo'][cliente])}s — tentando a proxima")
+                registrar("429 na porta %s; pausando %ds; texto (%d ch): %s"
+                          % (cliente, int(_ritmo["recuo"][cliente]), len(texto), texto[:80]))
+                _ritmo["recuo"][cliente] = min(RECUO_MAXIMO, _ritmo["recuo"][cliente] * 2)
+                continue
             print(f"  ! falha ao traduzir: {erro}")
-            registrar("HTTP %s ao traduzir: %s" % (erro.code, str(erro)[:120]))
-        return None
-    except Exception as erro:
-        print(f"  ! falha ao traduzir: {erro}")
-        registrar("falha ao traduzir: %s" % str(erro)[:160])
-        return None
+            registrar("HTTP %s na porta %s: %s" % (erro.code, cliente, str(erro)[:100]))
+            return None
+        except Exception as erro:
+            print(f"  ! falha ao traduzir: {erro}")
+            registrar("falha na porta %s: %s" % (cliente, str(erro)[:140]))
+            return None
 
-    # Deu certo: o bloqueio passou, entao o proximo 429 volta a recuar do inicio.
-    _ritmo["recuo"] = RECUO_INICIAL
+        # Deu certo: esta porta volta a recuar do inicio no proximo 429.
+        _ritmo["recuo"][cliente] = RECUO_INICIAL
 
-    try:
-        pedacos = dados[0]
-        return "".join(p[0] for p in pedacos if p and p[0])
-    except Exception:
-        print("  ! resposta em formato inesperado")
-        return None
+        try:
+            pedacos = dados[0]
+            return "".join(p[0] for p in pedacos if p and p[0])
+        except Exception:
+            print("  ! resposta em formato inesperado")
+            registrar("formato inesperado na porta %s" % cliente)
+            return None
+
+    # Todas as portas do Google em recuo: o plano B assume.
+    alternativa = traduzir_plano_b(texto, destino, origem)
+    if alternativa:
+        print("  (plano B) %s" % alternativa)
+    return alternativa
 
 
 # ─── Limpeza do texto vindo do jogo ───────────────────────────────────────────

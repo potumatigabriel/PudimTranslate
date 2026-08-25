@@ -69,17 +69,27 @@ for rot, rpy, rps in pares:
 comportamentos = [
     ("trata o 429 separado dos outros erros",
      r"429", r"429"),
-    ("recuo dobra ate um teto",
-     r"min\(RECUO_MAXIMO,\s*_ritmo\[.recuo.\]\s*\*\s*2\)",
-     r"\[Math\]::Min\(\$script:RecuoMaximo,\s*\$script:Recuo\s*\*\s*2\)"),
-    ("sucesso zera o recuo",
-     r"_ritmo\[.recuo.\]\s*=\s*RECUO_INICIAL", r"\$script:Recuo\s*=\s*\$script:RecuoInicial"),
+    ("recuo dobra ate um teto, POR PORTA",
+     r"min\(RECUO_MAXIMO, _ritmo\[.recuo.\]\[cliente\] \* 2\)",
+     r"\[Math\]::Min\(\$script:RecuoMaximo, \$script:Recuo\[\$cliente\] \* 2\)"),
+    ("sucesso zera o recuo daquela porta",
+     r"_ritmo\[.recuo.\]\[cliente\] = RECUO_INICIAL",
+     r"\$script:Recuo\[\$cliente\] = \$script:RecuoInicial"),
+    ("as tres portas do Google estao listadas",
+     r'GTX_CLIENTES = \("gtx", "at", "dict-chrome-ex"\)',
+     r'\$script:GtxClientes = @\("gtx", "at", "dict-chrome-ex"\)'),
+    ("um 429 bloqueia SO aquela porta e a tentativa segue na proxima",
+     r'_ritmo\["bloqueado_ate"\]\[cliente\] = time\.time\(\)[\s\S]{0,600}?continue',
+     r'\$script:BloqueadoAte\[\$cliente\] = \(Get-Date\)[\s\S]{0,900}?continue'),
+    ("o recuo e por porta, nao global",
+     r'"bloqueado_ate": \{c: 0\.0 for c in GTX_CLIENTES\}',
+     r'\$script:BloqueadoAte = @\{\}'),
     # Durante a pausa nao se toca no GOOGLE. O plano B pode ser chamado — e o
     # motivo de ele existir — entao a propriedade certa e que a checagem de pausa
     # venha ANTES de montar a URL do gtx, e que a funcao retorne ali.
-    ("a pausa e checada antes de montar a chamada ao Google",
-     r"if em_pausa\(\):[\s\S]{0,200}?return alternativa[\s\S]{0,600}?GTX_URL",
-     r"if \(\(Get-PudimPausa\) -gt 0\) \{[\s\S]{0,300}?return \$alternativa[\s\S]{0,600}?\$script:UrlGtx"),
+    ("porta em recuo e pulada antes de montar a chamada",
+     r'if _ritmo\["bloqueado_ate"\]\[cliente\] > time\.time\(\):[\s\S]{0,60}?continue',
+     r'if \(\$script:BloqueadoAte\[\$cliente\] -gt \(Get-Date\)\) \{ continue \}'),
     ("respeita o intervalo minimo antes de chamar",
      r"INTERVALO_MIN_CHAMADA - \(time\.time\(\)", r"\$desde -lt \$script:IntervaloMinChamada"),
     ("reescreve a resposta no lugar, sem trocar a entrada de diretorio",
@@ -125,13 +135,13 @@ extras = [
      r"MYMEMORY_URL\s*=", r"\$script:UrlMyMemory\s*="),
     ("plano B so aceita traducao de MAQUINA (created-by MT!)",
      r'created-by"\)\) == "MT!"', r'"created-by" -eq "MT!"'),
-    ("o plano B entra quando o Google esta em recuo",
-     r"if em_pausa\(\):[\s\S]{0,40}?alternativa = traduzir_plano_b",
-     r"if \(\(Get-PudimPausa\) -gt 0\) \{[\s\S]{0,60}?\$alternativa = Invoke-PudimPlanoB"),
+    ("o plano B entra so com TODAS as portas em recuo",
+     r"alternativa = traduzir_plano_b\(texto, destino, origem\)",
+     r"\$alternativa = Invoke-PudimPlanoB -Texto \$Texto"),
     ("log de erros com corte nas ultimas linhas",
      r"LOG_MAX_LINHAS\s*=\s*500", r"\$script:LogMaxLinhas\s*=\s*500"),
-    ("o 429 vai para o log, com o tamanho do texto",
-     r'registrar\("429 do Google', r'Write-PudimLog \("429 do Google'),
+    ("o 429 vai para o log, com a porta e o tamanho do texto",
+     r'registrar\("429 na porta %s', r'Write-PudimLog \("429 na porta \{0\}'),
     ("o log nunca derruba o tradutor",
      r"except Exception:[\s\S]{0,20}?pass", r"\} catch \{ \}"),
 ]
@@ -146,7 +156,7 @@ check("o limite de 500 linhas e o mesmo nos dois",
 # ── 5. Os dois falam a mesma coisa na tela ─────────────────────────────────────
 # O jogador le a janela do tradutor; a mensagem nao pode depender de qual
 # implementacao a maquina escolheu.
-for frase in ("Google limitou o ritmo", "Google em pausa", "(plano B)"):
+for frase in ("limitada (429)", "tentando a proxima", "(plano B)"):
     npy = PY.count(frase)
     nps = PS.count(frase) + PS_LOOP.count(frase)
     check('a frase "%s" existe nos dois' % frase[:34], npy >= 1 and nps >= 1,
