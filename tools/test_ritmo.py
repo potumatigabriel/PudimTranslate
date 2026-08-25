@@ -61,6 +61,12 @@ class RespostaFalsa:
         return self.bruto
 
 
+# O log NAO pode ser o de producao: as primeiras entradas do log real de 24/08 eram
+# deste teste ("texto (2 ch): oi", "rede caiu"), e elas atrapalham quem for diagnosticar
+# um problema de verdade.
+import tempfile
+tr.LOG_ARQUIVO = os.path.join(tempfile.mkdtemp(prefix="pudimtr_"), "log.txt")
+
 print("ritmo das chamadas ao Google")
 
 original_urlopen = tr.urllib.request.urlopen

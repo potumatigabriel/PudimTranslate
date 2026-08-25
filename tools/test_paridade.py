@@ -92,9 +92,16 @@ for rot, rpy, rps in comportamentos:
     check(rot, tpy and tps, "py=%s ps=%s" % (tpy, tps))
 
 # ── 3. O laco principal dos dois sai cedo durante a pausa ──────────────────────
-check("o laco Python sai cedo na pausa", "if em_pausa():" in PY and "continue" in PY)
-check("o laco PowerShell sai cedo na pausa",
-      re.search(r"\$pausa = Get-PudimPausa[\s\S]{0,800}?continue", PS_LOOP) is not None)
+# O laco NAO pode mais sair cedo na pausa: quem resolve ali e o plano B, dentro da
+# funcao de traducao. Sair antes tornava o plano B codigo morto — foi o que aconteceu
+# em 24/08, com as duas mudancas do mesmo dia se anulando.
+check("o laco Python NAO abandona o ciclo durante a pausa",
+      "if em_pausa() and time.time() - ultimo_sinal" in PY)
+check("o laco PowerShell NAO abandona o ciclo durante a pausa",
+      re.search(r"\$pausa -gt 0 -and \(\(Get-Date\) - \$ultimoSinal\)", PS_LOOP) is not None)
+check("nenhum dos dois abandona o ciclo logo apos detectar a pausa",
+      not re.search(r"if em_pausa\(\):[\s\S]{0,300}?continue\b", PY) and
+      not re.search(r"if \(\$pausa -gt 0\) \{[\s\S]{0,400}?continue", PS_LOOP))
 
 # ── 4. O 429 e reconhecido pelo CODIGO, nunca pelo texto ───────────────────────
 # A mensagem do .NET vem traduzida para o idioma do Windows, entao comparar
@@ -139,7 +146,7 @@ check("o limite de 500 linhas e o mesmo nos dois",
 # ── 5. Os dois falam a mesma coisa na tela ─────────────────────────────────────
 # O jogador le a janela do tradutor; a mensagem nao pode depender de qual
 # implementacao a maquina escolheu.
-for frase in ("Google limitou o ritmo", "aguardando o limite do Google passar", "(plano B)"):
+for frase in ("Google limitou o ritmo", "Google em pausa", "(plano B)"):
     npy = PY.count(frase)
     nps = PS.count(frase) + PS_LOOP.count(frase)
     check('a frase "%s" existe nos dois' % frase[:34], npy >= 1 and nps >= 1,

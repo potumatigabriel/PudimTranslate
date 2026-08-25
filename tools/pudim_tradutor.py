@@ -589,15 +589,14 @@ def main():
             # vale quando o pedido nao diz nada (mod antigo, ou teste manual).
             destino = normalizar_idioma(pedido.get("to")) or argumentos.to
 
-            # Em pausa por 429 nao ha o que fazer com os pedidos: sair daqui evita
-            # imprimir a mesma frase dezenas de vezes e deixa o sinal de vida em dia.
-            if em_pausa():
-                if time.time() - ultimo_sinal >= 5:
-                    gravar_resposta(caminho_res, respostas, int(time.time()))
-                    ultimo_sinal = time.time()
-                    print(f"  . aguardando o limite do Google passar ({int(em_pausa())}s)")
-                time.sleep(POLL_SECONDS)
-                continue
+            # Durante a pausa do Google o laco NAO para mais: quem resolve e o plano B,
+            # que vive dentro de traduzir(). A versao anterior saia daqui com `continue`
+            # antes de chegar la, e o plano B virou codigo morto — as duas mudancas do
+            # mesmo dia se anulavam. So o sinal de vida e atualizado por aqui.
+            if em_pausa() and time.time() - ultimo_sinal >= 5:
+                gravar_resposta(caminho_res, respostas, int(time.time()))
+                ultimo_sinal = time.time()
+                print(f"  . Google em pausa ({int(em_pausa())}s) — usando o plano B")
 
             novidade = False
             for item in pedido["items"]:

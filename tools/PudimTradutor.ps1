@@ -166,18 +166,16 @@ try {
         $destino = ConvertTo-PudimIdioma -Codigo $pedido.to
         if (-not $destino) { $destino = $To }
 
-        # Em pausa por 429 nao ha o que fazer com os pedidos: sair daqui evita
-        # imprimir a mesma frase dezenas de vezes e mantem o sinal de vida em dia.
+        # Durante a pausa do Google o laco NAO para mais: quem resolve e o plano B, que
+        # vive dentro de Invoke-PudimTraducao. A versao anterior saia daqui com `continue`
+        # antes de chegar la, e o plano B virou codigo morto — as duas mudancas do mesmo
+        # dia se anulavam. So o sinal de vida e atualizado por aqui.
         $pausa = Get-PudimPausa
-        if ($pausa -gt 0) {
-            if (((Get-Date) - $ultimoSinal).TotalSeconds -ge 5) {
-                Write-PudimResposta -Caminho $caminhoResposta -Respostas $respostas `
-                                    -Vivo (Get-PudimAgora)
-                $ultimoSinal = Get-Date
-                Write-Host "  . aguardando o limite do Google passar ($([int]$pausa)s)"
-            }
-            Start-Sleep -Milliseconds 300
-            continue
+        if ($pausa -gt 0 -and ((Get-Date) - $ultimoSinal).TotalSeconds -ge 5) {
+            Write-PudimResposta -Caminho $caminhoResposta -Respostas $respostas `
+                                -Vivo (Get-PudimAgora)
+            $ultimoSinal = Get-Date
+            Write-Host "  . Google em pausa ($([int]$pausa)s) — usando o plano B"
         }
 
         $novidade = $false

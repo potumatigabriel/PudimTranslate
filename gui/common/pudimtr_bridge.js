@@ -128,6 +128,16 @@ const PUDIM_TR_CARIMBO = /^\\?\[\d{1,2}:\d{2}(?::\d{2})?\]\s*/;
  * só para uma fala que por acaso tenha "<" e ">" no meio não ser confundida
  * com um apelido gigante.
  */
+/**
+ * Prefixo de canal que o jogo poe antes do apelido em fala de aliado ou privada:
+ * "(Aliado) <Fulano> oi", "(Privado) <Fulano> oi".
+ *
+ * Sem tirar isto, o proprio rotulo ia para o tradutor junto com a fala — no log de
+ * 24/08 aparece "(Aliado) <Pudim (1584)> going" sendo enviado inteiro. Vem ANTES
+ * do apelido, entao e removido antes dele.
+ */
+const PUDIM_TR_CANAL = /^\((?:[^)]{1,20})\)\s*/;
+
 const PUDIM_TR_APELIDO =
 	/^((?:\[[^\]]*\])*\s*<(?:\[[^\]]*\]|[^>\[\]]){1,80}>\s*(?:\[[^\]]*\])*\s*|(?:\[[^\]]*\]|[^:\[\]]){1,60}:\s*)/;
 
@@ -158,6 +168,13 @@ function pudim_TrPartes(texto)
 	{
 		prefixo += carimbo[0];
 		resto = resto.substr(carimbo[0].length);
+	}
+
+	const canal = PUDIM_TR_CANAL.exec(resto);
+	if (canal)
+	{
+		prefixo += canal[0];
+		resto = resto.substr(canal[0].length);
 	}
 
 	const apelido = PUDIM_TR_APELIDO.exec(resto);
