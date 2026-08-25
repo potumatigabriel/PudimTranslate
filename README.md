@@ -170,12 +170,34 @@ PudimTranslate - tradutor de chat
 
 Leave that window open while you play. Closing it stops translation; the game keeps running.
 
+Two other lines are worth recognising:
+
+```
+  ! Google limitou o ritmo (429). Pausando 5s.
+  . aguardando o limite do Google passar (5s)
+```
+
+That is Google rate-limiting your address, not a fault in the mod — see **The translator is running
+but nothing gets translated** below.
+
 ## When something goes wrong
 
 **The message says the translator is off.** The game was opened before the translator was running.
 This is the one failure that cannot fix itself mid-session: 0 A.D. indexes its data folders once at
 startup, so if the bridge was not there at that moment, it stays invisible for the whole session.
 Close 0 A.D. and open it again with the desktop shortcut.
+
+**The translator is running but nothing gets translated.** Look for `429` in its window. The
+translation endpoint is free and undocumented, and it rate-limits by IP address; when it decides you
+asked for too much it answers `HTTP Error 429: Too Many Requests` and keeps refusing for a while.
+
+The translator now backs off on its own — five seconds at first, doubling on each refusal, up to five
+minutes — and it makes no network call at all while it waits. A single successful translation resets
+the wait, so one bad moment does not slow down the rest of the session.
+
+There is nothing to fix on your side: the block belongs to Google and expires by itself. Just leave
+the window open. What you should *not* do is restart the translator over and over — every attempt
+during a block is what keeps the block alive.
 
 **The translator window flashes and disappears.** Something in it failed. Run `tools/PudimTradutor.bat`
 on its own — the window stays open and shows the error instead of vanishing.
@@ -184,8 +206,17 @@ on its own — the window stays open and shows the error instead of vanishing.
 that is deliberate — the game already shows those in your language. For anything else, check whether
 the translator window is still open.
 
+**Red `CVFSFile ... couldn't be opened` lines across the screen.** Fixed — but only for translator
+versions from 19 Aug 2026 onward, so update `tools/` if you still see it. The translator used to
+publish each answer by writing a temporary file and renaming it over the old one. That is the textbook
+way to avoid a half-written read, but it replaces the *directory entry*, and 0 A.D. caches those from
+when it indexed the folder: the entry then pointed at a file that no longer existed. Since every
+answer is padded to the same size, it is now rewritten in place, so the file the game indexed stays
+the same file.
+
 **You updated the mod and nothing changed.** 0 A.D. loads mod scripts only when it starts. Close the
-game completely and open it again.
+game completely and open it again. The same applies to `tools/pudim_tradutor.py`: it is read once at
+startup, so close the translator window and reopen it after updating.
 
 **The desktop shortcut points somewhere stale** after moving the mod folder. Run the launcher once
 from its new location and the shortcut fixes its own target.
